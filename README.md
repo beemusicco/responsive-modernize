@@ -20,6 +20,8 @@ phase 8 escalate   ESCALATION-BRIEF.md + [RM-ESCALATE] marker
                    ↳ --auto-impeccable: spawn `claude` CLI subprocess
 ```
 
+> **Quickstart**: [USAGE.md](./USAGE.md) (English) · [UPORABA.md](./UPORABA.md) (Slovenian)
+
 ---
 
 ## Why?
