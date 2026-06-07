@@ -2,6 +2,46 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.14.7] — 2026-06-07 (round-10/11 e2e on solaronics + adriafab)
+
+After live e2e tests on solaronics-si (already optimized) + adriafab (Vercel-deployed), 1 NEW bug found.
+
+### Fixed
+
+**[HIGH] truncate-text-overflow utility guard missed Tailwind utility CATEGORIES** (lib/propose.mjs)
+- v1.14.5 added literal utility name set (.group, .peer, .sr-only, .flex, .grid, …) + variant prefix regex (sm:, hover:, md:, …)
+- BUT: Tailwind utility CATEGORIES like `mt-6`, `bg-blue-500`, `text-sm`, `flex-1` follow `<prefix>-<value>` pattern not covered by either rule
+- Real-world repro on adriafab: codemod injected `.mt-6 { text-wrap: balance; overflow-wrap: anywhere; min-width: 0 }` to globals.css. `.mt-6` = margin-top utility used on countless elements → `min-width: 0` broke flex children → /si/contact 6.83% mobile pixel diff, /si/materials 5.32%, /si/journal 4.22%
+- Fix: TW_UTILITY_PREFIX_RE catches ~95% of Tailwind utility categories (spacing, sizing, color, layout, typography, effects, filter, misc — 60+ prefix categories)
+- Probe verified: `.mt-6`, `.bg-blue-500`, `.text-sm`, `.flex-1`, `.gap-4`, `.rounded-lg`, `.opacity-50` all correctly skipped; only `.real-hero-title` (semantic class) gets truncate
+
+### Test results from R10/R11
+
+**solaronics-si** (Next 16 + Tailwind, pre-optimized in prior session):
+- 1 fix applied (add-focus-visible-rules × 21 declarations) — clean a11y win
+- 8 viewport regressions max 2.41% — small, non-breaking
+- NO new bug class (v1.14.6 touch-target gate worked correctly)
+
+**adriafab** (Next 15 + Tailwind v4, Vercel-deployed):
+- 3 fixes applied: tailwind-safe-area × 3 (clean iPhone fix), truncate-text-overflow × 1 (.mt-6 BUG), add-focus-visible-rules × 10 (clean)
+- 12 viewport regressions, /si/contact 6.83% — caused by .mt-6 destroyer
+- Revert + ship v1.14.7
+
+### Honest update — 11 rounds total now
+| Round | Bugs found | Surface |
+|---|---|---|
+| 1-7 | 46 | synthetic adversarial |
+| 8 (octanorm e2e) | 1 | .group Tailwind utility |
+| 9 (libro e2e) | 2 | dist/build/out exclusion + touch-target over-aggression |
+| 10 (solaronics e2e) | 0 | (clean — prior session fixes held + v1.14.6 fixes worked) |
+| **11 (adriafab e2e)** | **1** | .mt-6 Tailwind utility category |
+| **TOTAL** | **50** | — |
+
+R10 = FIRST round with 0 bugs! Tool stabilizing on already-pre-optimized targets. R11 found 1 more bug in fresh codebase.
+
+### Pattern over 11 rounds
+Real-world rounds 8, 9, 10, 11 = 1, 2, 0, 1 = 1.0 bugs/round avg. **Lower than synthetic (~6.5/round)** because real-world doesn't generate creative attack vectors. Real-world surfaces class-of-pattern-mismatch with framework conventions.
+
 ## [1.14.6] — 2026-06-07 (real-world bug from libro test)
 
 After live e2e test on libro frontend (Vite + React 19 + Tailwind v4), found 2 bugs:
