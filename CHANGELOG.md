@@ -2,6 +2,32 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.14.5] — 2026-06-07 (real-world bug from octanorm-adria test)
+
+After live e2e test on octanorm-adria production project (Next 16 + Tailwind, 216 components using `.group` className), discovered the truncate-text-overflow codemod injects global rules keyed on Tailwind utility class names.
+
+### Fixed
+
+**[HIGH] truncate-text-overflow on Tailwind utility classes** (lib/propose.mjs)
+- Real-world repro: diagnose flagged `.group` for text-overflow (legitimate runtime detection on some text-containing group elements). Codemod then injected `.group { text-wrap: balance; overflow-wrap: anywhere; min-width: 0 }` to largest CSS file. `.group` is a Tailwind STATE marker (`group-hover:`, `group-focus:`) used on 216 octanorm components — the global rule broke flex layouts. Verified pixel-diff: /sl/360 page = 9% mobile-m diff, traced to BoothConfiguratorTeaser button affected by min-width:0.
+- Root cause: same class as v1.13 sidebar substring bug — class-name=semantic-intent assumption fails on Tailwind utility classes.
+- Fix: propose-layer guard with TAILWIND_UTILITY_CLASSES set + variant-prefix regex (`sm:|md:|lg:|hover:|focus:|group:|peer:|dark:|motion-safe:|motion-reduce:`). When selector matches, codemod skipped + info-severity message surfaces the detection for manual review.
+
+### Added — regression fixture
+- regressions/13-tailwind-group-utility-no-truncate
+
+### Verified
+- 26 unit-colormath + 30 fixtures + 12 smoke = 68/68 still pass
+- Direct propose-layer probe: 5 samples (`.group`, `.peer`, `.md:flex`, `.hover:bg-red-500`, `.real-content`) → only `.real-content` gets truncate. Other 4 surfaced as utility-skip info.
+
+### Honest update — 8 rounds total now
+| Round | Bugs found | Surface |
+|---|---|---|
+| 1-7 | 46 | code reviews + collabs |
+| **8 (real-world e2e)** | **1** | live octanorm test |
+
+Real-world deployment IS the missing review surface. Synthetic adversarial probes (1-7) caught 46 bugs; the FIRST real-world test caught a 47th. Pattern: adversarial reviews surface implementation bugs; real-world deployment surfaces interaction bugs with framework conventions.
+
 ## [1.14.4] — 2026-06-07 (round-7 found 10 bugs, including CRITICAL dark-site corruption)
 
 After /collab round-7 sparring (parallel with planned 1.14.3 npm publish) targeting 12 unprobed surfaces, found 10 NEW bugs. v1.14.3 npm publish ABORTED — would have shipped CRITICAL bug that destroys dark-themed user sites on --yes.

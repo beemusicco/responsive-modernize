@@ -1,0 +1,2 @@
+/* Pre-bug state: .group is heavily-used Tailwind utility, NOT a real overflow target */
+.group { display: flex; }
