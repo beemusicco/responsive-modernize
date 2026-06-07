@@ -1,0 +1,24 @@
+{
+  "$schema": "https://openclaw.dev/schemas/responsive-modernize.json",
+  "target": {
+    "url": "http://localhost:3000",
+    "routes": ["/", "/pricing", "/about"],
+    "src": ["src/**/*.{css,scss,tsx,jsx,html}"],
+    "html": ["**/*.html", "!node_modules/**", "!.next/**"]
+  },
+  "framework": "next",
+  "viewports": null,
+  "engines": ["chromium"],
+  "thresholds": {
+    "horizontal_scroll": "error",
+    "touch_target_min_px": 44,
+    "font_size_min_px": 14,
+    "contrast_ratio_min": 4.5,
+    "diff_px_pct_max": 0.5
+  },
+  "i18n": {
+    "test_locales": ["sl", "en"],
+    "url_pattern": "{locale}/{route}"
+  },
+  "out": ".responsive-modernize"
+}

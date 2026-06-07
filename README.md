@@ -1,0 +1,303 @@
+# responsive-modernize
+
+> Bulletproof multi-viewport responsive audit + automatic modernization for any web stack.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
+
+`responsive-modernize` is a CLI primitive that detects responsive anti-patterns across your site (multi-viewport, multi-engine), proposes ranked fixes, applies safe codemods atomically with backup, verifies via pixel-match + re-diagnose, and ships a client-ready report. When residuals remain that need semantic JSX understanding, it can escalate to an LLM agent automatically.
+
+```
+phase 1 scan       CSS + HTML + SFC + CSS-in-JS + SCSS + Vanilla Extract AST
+phase 2 baseline   Playwright multi-viewport × multi-engine screenshots
+phase 3 diagnose   per-viewport runtime checks (overflow, touch, fonts, …)
+phase 4 propose    ranked plan + Utopia codemod kit
+phase 5 apply      atomic backup + 14 auto-fix handlers
+                   ↳ iterative loop (3×) — converge on 0 auto-fixable
+phase 6 verify     re-baseline + pixelmatch + re-diagnose
+phase 7 report     REPORT.html + sprites + REPORT.md
+phase 8 escalate   ESCALATION-BRIEF.md + [RM-ESCALATE] marker
+                   ↳ --auto-impeccable: spawn `claude` CLI subprocess
+```
+
+---
+
+## Why?
+
+Most "responsive" sites pass visual inspection on the dev's monitor and break on a 360-px Android. Existing tools either audit-only (Lighthouse, axe) or visual-diff (Percy, Chromatic). None do **scan → diagnose → codemod → iterate → escalate** as one pipeline.
+
+This primitive ships:
+- Detection of 11 responsive anti-pattern kinds across **6 input file types** (CSS, HTML inline, JSX/TSX, Vue SFC, Svelte SFC, Astro SFC, Vanilla Extract `.css.ts`, SCSS, plain CSS)
+- 14 atomic auto-fix handlers (meta viewport, Utopia fluid type/space scale, safe-area-inset, fixed-width overflow, element-overflow safety, Tailwind className edits, touch-target enforce, image aspect-ratio, …)
+- Iterative apply loop that catches post-migrate cascade issues
+- Optional LLM agent escalation for residuals that need semantic JSX restructuring (via `claude` CLI subprocess at `$0` marginal cost on operator's OAuth)
+
+---
+
+## Install
+
+```bash
+git clone https://github.com/beemusicco/responsive-modernize.git
+cd responsive-modernize
+pnpm install            # or npm/yarn
+npx playwright install chromium webkit firefox
+```
+
+Optional: `npm link` to expose `responsive-modernize` globally.
+
+---
+
+## Quick start
+
+```bash
+# In a project root:
+echo '{
+  "target": {"url": "http://localhost:3000", "routes": ["/", "/about"]},
+  "framework": "next"
+}' > .responsive-modernize.json
+
+# Audit (no edits):
+node /path/to/responsive-modernize/run.mjs
+
+# Audit + auto-fix safe codemods + verify:
+node /path/to/responsive-modernize/run.mjs --yes
+
+# Aggressive mode (touch-target enforce, etc.):
+node /path/to/responsive-modernize/run.mjs --yes --aggressive
+
+# Full matrix (11 viewports × 3 engines):
+node /path/to/responsive-modernize/run.mjs --yes --deep
+
+# Production auto-spawn LLM agent for residuals:
+node /path/to/responsive-modernize/run.mjs --yes --auto-impeccable
+```
+
+---
+
+## Brief schema — `.responsive-modernize.json`
+
+All fields optional with sensible defaults. Schema in `templates/responsive-modernize.schema.json`.
+
+```json
+{
+  "$schema": "https://openclaw.dev/schemas/responsive-modernize.json",
+  "target": {
+    "url": "http://localhost:3000",
+    "routes": ["/", "/pricing", "/about"],
+    "src": ["src/**/*.{css,scss,tsx,jsx,vue,svelte,astro}"],
+    "html": ["**/*.html", "!node_modules/**"]
+  },
+  "framework": "next",
+  "viewports": null,
+  "engines": ["chromium"],
+  "thresholds": {
+    "horizontal_scroll": "error",
+    "touch_target_min_px": 44,
+    "font_size_min_px": 14,
+    "contrast_ratio_min": 4.5,
+    "diff_px_pct_max": 0.5
+  },
+  "out": ".responsive-modernize"
+}
+```
+
+Defaults if omitted:
+- `viewports`: 6 profiles (mobile-m 360, mobile-l 375, mobile-xl 430, tablet-p 768, laptop 1280, desktop 1920)
+- `engines`: `["chromium"]` (use `--deep` for chromium+webkit+firefox)
+- `framework`: `static` (no JS framework hints)
+
+---
+
+## What gets scanned (by stack)
+
+| Stack | Extension | Coverage |
+|---|---|---|
+| Plain CSS | `.css` | Full — `@media`, `@container`, `font-size`, `padding/margin`, fixed positions |
+| SCSS / SASS | `.scss`, `.sass` | Full — postcss-scss parser handles nesting |
+| Less | `.less` | Partial — base postcss parser (may miss nesting) |
+| Inline `<style>` in HTML | `.html` | Full |
+| **Vue SFC** | `.vue` | `<style>` + `<style scoped>` + `<style lang="scss">` |
+| **Svelte SFC** | `.svelte` | `<style>` blocks |
+| **Astro SFC** | `.astro` | `<style>` blocks |
+| **CSS-in-JS** (styled-components, emotion, twin.macro) | `.tsx`, `.jsx`, `.ts`, `.js` | Template literals (`styled.X\`...\``, `css\`...\``, `tw\`...\``) |
+| **Vanilla Extract** | `.css.ts`, `.css.js` | Detection only (flagged for manual review) |
+| Tailwind v4 directives | files with `@theme`/`@apply`/`@layer` | Silently skipped (no false-positive parse errors) |
+
+---
+
+## Auto-fix handlers (14 total)
+
+| Order | Issue kind | Auto-fix | Description |
+|---|---|---|---|
+| 1 | `missing-meta-viewport` | `inject-meta-viewport` | Prepend canonical viewport meta to `<head>` |
+| 1 | `meta-viewport-blocks-zoom` | `fix-meta-viewport` | Strip `user-scalable=no` / `maximum-scale=1` |
+| 2 | `fluid-type-opportunity` | `inject-utopia-scale` | Append Utopia perfect-fourth fluid scale (320→1920) + form normalize |
+| 3 | `no-reduced-motion-guard` | `inject-reduced-motion-guard` | Append `@media (prefers-reduced-motion: reduce)` block |
+| 4 | `fixed-no-safe-area` | `add-safe-area-inset` | Wrap bottom value in `calc(... + env(safe-area-inset-bottom))` |
+| 5 | `px-font-not-token` | `migrate-px-fonts-to-utopia` | postcss walk: `font-size: NNpx` → `var(--step-X)` |
+| 6 | `px-spacing-not-token` | `migrate-px-spacing-to-utopia` | postcss walk: `padding/margin/gap: NNpx` → `var(--space-X)` (incl. shorthand) |
+| 7 | `img-no-dimensions` (local) | `add-img-aspect-ratio` | sharp reads W×H → `style="aspect-ratio: W/H"` |
+| 8 | `img-remote-no-dimensions` | `add-remote-img-aspect-ratio` | fetch + sharp + cache → `style="aspect-ratio: W/H"` |
+| 9 | `fixed-width-overflow` | `fix-fixed-width-overflow` | postcss walk: `width: NNpx (≥600)` → `min(100%, NNpx)` |
+| 10 | `element-overflow` (runtime) | `fix-element-overflow` | Append `<sel> { max-width: 100%; box-sizing: border-box; }` to largest CSS |
+| 11 | `touch-target-fixable` | `enforce-touch-target-min` | `--aggressive`: null hardcoded width/height <44 + append min sizing |
+| 12 | `tailwind-touch-target` | `tailwind-touch-target` | JSX className edit: drop `h-N<11` / `w-N<11`, add `min-h-11` / `min-w-11` |
+| 13 | `tailwind-safe-area` | `tailwind-safe-area` | JSX className append: `pb-[env(safe-area-inset-bottom)]` to `fixed/sticky bottom-N` |
+
+**Atomic guarantee**: every touched file backed up to `.responsive-modernize/backup/<rel-path>` before mutation (idempotent — never overwrites pre-iter-1 snapshot). Writes use `safeWrite` tmp+rename pattern — prevents partial-write corruption.
+
+**Idempotency**: re-running `--yes` is safe. Already-migrated values (`var()`, `clamp()`, `calc()`, `env()`) are skipped.
+
+---
+
+## Runtime diagnose (per-viewport)
+
+Each viewport × engine combination runs `page.evaluate()` for:
+- **horizontal-scroll** detection + culprit selector locator (top 5 offending elements with sizes)
+- **text-overflow** per visible block
+- **touch-target-too-small** (<44×44, WCAG 2.5.5 + Apple HIG + Material)
+- **font-size-too-small** (<14px floor; 16px prevents iOS auto-zoom)
+- **img-missing-dimensions** (CLS predictor)
+- **fixed-bottom-no-safe-area** (iPhone home indicator overlap) — uses stylesheet rule walk to avoid false positives after auto-fix
+- **zoom-blocked** (`user-scalable=no` / `maximum-scale=1` WCAG 1.4.4 violation)
+
+---
+
+## Standard viewport profiles
+
+Per StatCounter Q1 2026:
+
+| id | dimensions | tier |
+|---|---|---|
+| mobile-s | 320×568 | deep — iPhone SE 1st |
+| **mobile-m** | 360×780 | default — Samsung S |
+| **mobile-l** | 375×812 | default — iPhone 11-14 |
+| **mobile-xl** | 430×932 | default — iPhone 15 Pro Max |
+| **tablet-p** | 768×1024 | default — iPad portrait |
+| tablet-l | 1024×768 | deep |
+| **laptop** | 1280×800 | default — MacBook |
+| laptop-l | 1440×900 | deep |
+| **desktop** | 1920×1080 | default — Full HD |
+| ultrawide | 2560×1440 | deep — QHD |
+| 4k | 3840×2160 | deep — fluid stress test |
+
+`--deep` runs all 11. Custom profiles via `viewports` array.
+
+---
+
+## Output
+
+```
+<project>/.responsive-modernize/
+├── scan.json                # phase 1 — static analysis
+├── baseline/                # phase 2 — full-page screenshots
+├── baseline.json
+├── diagnose.json            # phase 3 — runtime issues
+├── propose.md               # phase 4 — human plan
+├── propose.json             # phase 4 — machine plan + codemod kit
+├── apply.json               # phase 5 — applied + skipped manifest
+├── backup/                  # phase 5 — pre-apply file mirror
+├── verify/                  # phase 6 — post-apply screenshots
+├── diff/                    # phase 6 — pixelmatch PNG diffs
+├── verify.json
+├── REPORT.html              # phase 7 — interactive viewer
+├── REPORT.md
+├── sprite-baseline.png      # phase 7 — N×M grid
+├── sprite-verify.png
+├── ESCALATION-BRIEF.md      # phase 8 — agent prompt (if residuals)
+└── report.json
+```
+
+Add `.responsive-modernize/` to your project `.gitignore`.
+
+---
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Clean — no error/warn issues |
+| 1 | Issues found — block CI merge |
+| 2 | Tool error (dependency missing, brief invalid) |
+
+GitHub Action template:
+
+```yaml
+- name: Responsive audit
+  run: |
+    cd /tmp && git clone https://github.com/beemusicco/responsive-modernize.git
+    cd responsive-modernize && pnpm install && npx playwright install chromium
+    cd $GITHUB_WORKSPACE && node /tmp/responsive-modernize/run.mjs --url ${{ env.PREVIEW_URL }}
+```
+
+---
+
+## Performance
+
+On Apple M4 Pro, against a live dev server:
+
+| Mode | Time |
+|---|---|
+| Default (1 route × 6 viewports × chromium, phases 1+2+3+4+7) | ~10 s |
+| `--yes` (+ apply + iterative + verify) | ~25 s |
+| `--deep` (11 viewports × 3 engines × 1 route) | ~75 s |
+| `--deep --yes` (full + agent escalate) | ~150 s + agent time |
+
+Cost: $0 marginal. All local Playwright + node. `--auto-impeccable` uses operator's claude OAuth session ($0 on subscription).
+
+---
+
+## Examples
+
+See `examples/` for minimal reproductions of:
+- `examples/vanilla-css` — plain CSS with hardcoded px → Utopia migration
+- `examples/tailwind-next` — Next.js 16 + Tailwind v4
+- `examples/vue-sfc` — Vue 3 SFC with `<style scoped>`
+- `examples/svelte` — SvelteKit
+- `examples/astro` — Astro SFC
+- `examples/scss-nesting` — SCSS with nesting + `@use`
+
+Each example has a `before/` and `after/` snapshot.
+
+---
+
+## Comparison
+
+| Tool | Multi-viewport | Static AST | Runtime | Codemod | Iterative | Multi-stack | Agent |
+|---|---|---|---|---|---|---|---|
+| **responsive-modernize** | ✓ 6-11 vp | ✓ | ✓ | ✓ 14 | ✓ | ✓ 6 stacks | ✓ |
+| Lighthouse | × (1 vp) | × | ✓ | × | × | × | × |
+| axe-core | × (DOM) | × | ✓ | × | × | × | × |
+| Percy / Chromatic | ✓ | × | × (pixel only) | × | × | × | × |
+| PostCSS plugins | × | ✓ | × | ✓ | × | × | × |
+
+---
+
+## Contributing
+
+PRs welcome. See `CONTRIBUTING.md` for development setup, test guidance, and the codemod handler protocol.
+
+Issue templates expect:
+- Stack signature (framework, CSS authoring)
+- `.responsive-modernize.json` content
+- Console log (esp. scan phase + apply manifest)
+- Expected vs. actual
+
+---
+
+## License
+
+MIT © beemusicco.
+
+Built initially for the openclaw agency stack. Battle-tested on production Next.js / Tailwind sites (solaronics.si) before open-sourcing.
+
+---
+
+## Acknowledgements
+
+- [Utopia](https://utopia.fyi/) for the fluid type/space scale methodology
+- [LogRocket — Container Queries in 2026](https://blog.logrocket.com/container-queries-2026/) for grounding the static analysis playbook
+- [Playwright](https://playwright.dev/) for multi-engine multi-viewport rendering
+- [postcss](https://postcss.org/) + [cheerio](https://cheerio.js.org/) for AST work
+- [sharp](https://sharp.pixelplumbing.com/) for image dimension probing
+- [pixelmatch](https://github.com/mapbox/pixelmatch) for visual regression

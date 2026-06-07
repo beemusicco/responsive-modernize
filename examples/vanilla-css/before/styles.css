@@ -1,0 +1,16 @@
+body { margin: 0; padding: 24px; font-family: sans-serif; }
+.huge { width: 1600px; background: #ff6b6b; padding: 20px; color: white; }
+.h1 { font-size: 32px; }
+.h2 { font-size: 24px; }
+.h3 { font-size: 20px; }
+.body { font-size: 16px; }
+.small { font-size: 14px; }
+.xs { font-size: 12px; }
+.xxs { font-size: 10px; }
+.lead { padding: 16px; margin: 8px; gap: 12px; }
+.section { padding: 32px; margin: 24px; }
+.card { padding: 16px; margin: 12px; gap: 8px; }
+.btn { padding: 8px 16px; }
+.fixed-bar { position: fixed; bottom: 0; left: 0; right: 0; padding-bottom: 16px; background: #333; color: white; }
+.anim { animation: pulse 2s infinite; }
+@keyframes pulse { 0% { opacity: 1 } 100% { opacity: 0.6 } }

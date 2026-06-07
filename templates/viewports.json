@@ -1,0 +1,18 @@
+{
+  "_comment": "Viewport defaults per StatCounter Q1 2026 + Awwwards-grade coverage. Mobile share = 60-75% of traffic, so default tilts mobile-first.",
+  "profiles": {
+    "mobile-s": {"id": "mobile-s", "label": "Mobile S (320)", "width": 320, "height": 568, "deviceScaleFactor": 2, "isMobile": true, "hasTouch": true, "default": false, "deep": true, "note": "iPhone SE 1st gen, lowest reasonable"},
+    "mobile-m": {"id": "mobile-m", "label": "Mobile M (360)", "width": 360, "height": 780, "deviceScaleFactor": 3, "isMobile": true, "hasTouch": true, "default": true, "note": "Samsung S series — most common Android"},
+    "mobile-l": {"id": "mobile-l", "label": "Mobile L (375)", "width": 375, "height": 812, "deviceScaleFactor": 3, "isMobile": true, "hasTouch": true, "default": true, "note": "iPhone 11-14"},
+    "mobile-xl": {"id": "mobile-xl", "label": "Mobile XL (430)", "width": 430, "height": 932, "deviceScaleFactor": 3, "isMobile": true, "hasTouch": true, "default": true, "note": "iPhone 15 Pro Max + Android Plus"},
+    "tablet-p": {"id": "tablet-p", "label": "Tablet portrait (768)", "width": 768, "height": 1024, "deviceScaleFactor": 2, "isMobile": true, "hasTouch": true, "default": true, "note": "iPad portrait"},
+    "tablet-l": {"id": "tablet-l", "label": "Tablet landscape (1024)", "width": 1024, "height": 768, "deviceScaleFactor": 2, "isMobile": false, "hasTouch": true, "default": false, "deep": true, "note": "iPad landscape / small laptop"},
+    "laptop": {"id": "laptop", "label": "Laptop (1280)", "width": 1280, "height": 800, "deviceScaleFactor": 2, "isMobile": false, "hasTouch": false, "default": true, "note": "MacBook standard"},
+    "laptop-l": {"id": "laptop-l", "label": "Laptop L (1440)", "width": 1440, "height": 900, "deviceScaleFactor": 2, "isMobile": false, "hasTouch": false, "default": false, "deep": true, "note": "MacBook Pro 15\" / common dev"},
+    "desktop": {"id": "desktop", "label": "Desktop (1920)", "width": 1920, "height": 1080, "deviceScaleFactor": 1, "isMobile": false, "hasTouch": false, "default": true, "note": "Full HD — most common desktop"},
+    "ultrawide": {"id": "ultrawide", "label": "Ultrawide (2560)", "width": 2560, "height": 1440, "deviceScaleFactor": 1, "isMobile": false, "hasTouch": false, "default": false, "deep": true, "note": "QHD ultrawide"},
+    "4k": {"id": "4k", "label": "4K (3840)", "width": 3840, "height": 2160, "deviceScaleFactor": 1, "isMobile": false, "hasTouch": false, "default": false, "deep": true, "note": "4K — fluid scale stress test"}
+  },
+  "defaults": ["mobile-m", "mobile-l", "mobile-xl", "tablet-p", "laptop", "desktop"],
+  "deep": ["mobile-s", "mobile-m", "mobile-l", "mobile-xl", "tablet-p", "tablet-l", "laptop", "laptop-l", "desktop", "ultrawide", "4k"]
+}

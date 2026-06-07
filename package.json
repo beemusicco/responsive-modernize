@@ -1,0 +1,66 @@
+{
+  "name": "responsive-modernize",
+  "version": "1.8.1",
+  "description": "Bulletproof multi-viewport responsive audit + automatic modernization. Scans CSS/HTML/JSX/Vue/Svelte/Astro/CSS-in-JS/SCSS/Vanilla Extract for responsive anti-patterns, runs Playwright multi-engine runtime checks, proposes ranked fixes, applies safe atomic codemods (Utopia fluid type/space, safe-area-inset, Tailwind className edits, fixed-width overflow, image aspect-ratio, ...), verifies via pixelmatch + re-diagnose, escalates residuals to LLM agent via claude CLI subprocess.",
+  "type": "module",
+  "bin": {
+    "responsive-modernize": "./run.mjs"
+  },
+  "files": [
+    "lib/",
+    "templates/",
+    "run.mjs",
+    "remotion.config.ts",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beemusicco/responsive-modernize.git"
+  },
+  "keywords": [
+    "responsive",
+    "responsive-design",
+    "css",
+    "tailwind",
+    "playwright",
+    "audit",
+    "codemod",
+    "utopia",
+    "fluid-typography",
+    "container-queries",
+    "safe-area-inset",
+    "viewport",
+    "wcag",
+    "accessibility",
+    "mobile-first",
+    "vue",
+    "svelte",
+    "astro",
+    "nextjs",
+    "css-in-js"
+  ],
+  "author": "beemusicco (Samo Korošec)",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "run": "node run.mjs",
+    "test:smoke": "node test/smoke.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.50.0",
+    "postcss": "^8.5.0",
+    "postcss-scss": "^4.0.9",
+    "postcss-selector-parser": "^7.0.0",
+    "postcss-value-parser": "^4.2.0",
+    "cheerio": "^1.0.0",
+    "pixelmatch": "^7.1.0",
+    "pngjs": "^7.0.0",
+    "sharp": "^0.34.0",
+    "globby": "^14.0.0",
+    "kleur": "^4.1.5"
+  }
+}

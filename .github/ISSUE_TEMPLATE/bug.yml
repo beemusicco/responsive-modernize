@@ -1,0 +1,57 @@
+name: Bug report
+description: Something is wrong — a codemod broke a file, a scanner missed an issue, a phase crashed.
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `node run.mjs --version` or commit hash if from git.
+      placeholder: "1.7.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: stack
+    attributes:
+      label: Project stack
+      multiple: true
+      options:
+        - Vanilla CSS / SCSS
+        - Next.js + Tailwind
+        - Vue SFC
+        - Svelte
+        - Astro
+        - Vite + React
+        - CSS-in-JS (styled-components / emotion)
+        - Vanilla Extract
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: brief
+    attributes:
+      label: .responsive-modernize.json brief
+      description: Paste your full brief (redact target.url if private).
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output
+      description: Paste the run output — especially scan + apply phases.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+      description: What did you expect to happen? What actually happened?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal repro
+      description: If possible, include a minimal reproduction (a single broken file, before+after) — speeds up triage by ~10×.

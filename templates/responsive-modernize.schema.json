@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openclaw.dev/schemas/responsive-modernize.json",
+  "title": "Responsive Modernize Brief",
+  "description": "FUTURE-N marker for /responsive-modernize. Drop into project root as .responsive-modernize.json. Walker finds nearest one in cwd or parents.",
+  "type": "object",
+  "properties": {
+    "target": {
+      "type": "object",
+      "description": "What to audit. URL preferred; src/html for static-only scan.",
+      "properties": {
+        "url": {"type": "string", "description": "Running dev URL — required for baseline/diagnose/verify phases"},
+        "routes": {"type": "array", "items": {"type": "string"}, "description": "Routes to test (joined with url). Default ['/']"},
+        "src": {"type": "array", "items": {"type": "string"}, "description": "Glob patterns for CSS/component scan. Default ['**/*.{css,scss}']"},
+        "html": {"type": "array", "items": {"type": "string"}, "description": "Glob patterns for HTML scan. Default ['**/*.html']"}
+      }
+    },
+    "framework": {
+      "type": "string",
+      "enum": ["next", "vite", "remix", "astro", "svelte", "nuxt", "wp", "static"],
+      "description": "Optional hint — adjusts which output dirs to scan"
+    },
+    "viewports": {
+      "anyOf": [{"type": "null"}, {"type": "array", "items": {"type": "string"}}],
+      "description": "Viewport profile IDs from viewports.json. null = use defaults (6 profiles)"
+    },
+    "engines": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["chromium", "webkit", "firefox"]},
+      "description": "Browser engines. Default ['chromium']. --deep adds webkit + firefox."
+    },
+    "thresholds": {
+      "type": "object",
+      "description": "Hard limits — issues above these = error severity",
+      "properties": {
+        "horizontal_scroll": {"type": "string", "enum": ["error", "warn", "off"], "default": "error"},
+        "touch_target_min_px": {"type": "integer", "default": 44, "description": "WCAG 2.5.5 + Apple HIG + Material"},
+        "font_size_min_px": {"type": "integer", "default": 14, "description": "16 prevents iOS auto-zoom; 14 absolute floor"},
+        "contrast_ratio_min": {"type": "number", "default": 4.5, "description": "WCAG AA"},
+        "diff_px_pct_max": {"type": "number", "default": 0.5, "description": "Verify phase: max acceptable pixel diff per viewport"}
+      }
+    },
+    "i18n": {
+      "type": "object",
+      "description": "Test multiple locales — catches text-overflow class (Slovenian ~30% longer)",
+      "properties": {
+        "test_locales": {"type": "array", "items": {"type": "string"}},
+        "url_pattern": {"type": "string", "description": "Template e.g. '{locale}/{route}'"}
+      }
+    },
+    "rtl": {
+      "type": "boolean",
+      "description": "Add a dir=rtl pass in baseline + diagnose — catches LTR-only physical-property layouts (left/right vs inline-start/inline-end).",
+      "default": false
+    },
+    "forcedColors": {
+      "type": "boolean",
+      "description": "Add a forced-colors: active emulation pass — Windows High Contrast Mode.",
+      "default": false
+    },
+    "colorSchemes": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["light", "dark"]},
+      "description": "Color schemes to baseline. Default ['light']. --deep adds 'dark'.",
+      "default": ["light"]
+    },
+    "out": {"type": "string", "default": ".responsive-modernize"}
+  }
+}

@@ -1,0 +1,36 @@
+name: Feature request / new stack support
+description: Propose a new auto-fix handler, runtime check, or stack scanner (Stylex, Panda, UnoCSS, Solid, Qwik, …).
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of feature?
+      options:
+        - New auto-fix handler
+        - New runtime check
+        - New stack scanner
+        - CLI flag / output format
+        - Performance / DX improvement
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What problem does this solve? Who benefits?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-api
+    attributes:
+      label: Proposed behaviour
+      description: What does the brief / CLI / output look like? Show an example.
+    validations:
+      required: true
+  - type: textarea
+    id: example-fixture
+    attributes:
+      label: Example fixture
+      description: Minimal before/after of the input you want supported.
