@@ -2,6 +2,25 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.13.2] — 2026-06-07 (round-2 review found regressions in 1.13.1)
+
+### Fixed — regressions introduced by 1.13.1 hotfix
+
+**CRITICAL — fix-of-fix:**
+- tailwindNavHamburgerCodemod: id + newAttrs declarations were accidentally DROPPED during 1.13.1 refactor → ReferenceError on every nav with ≥5 items. Restored.
+
+**HIGH:**
+- rewriteTagClassNames was still using lazy CLASSNAME_ATTR_RE + greedy TAG_OPEN_RE → broke on <a href="text>more"> with > in attr values AND on className={cn("a", {b: 1})} nested braces. Rewritten to use balanced walker (state-machine attribute parser that respects quoted values + JSX expressions).
+
+### Verified
+- nav with 6 <a> items correctly wrapped: data-rm-hamburger + rm-nav-toggle-1 + hidden peer-checked:flex
+- <a href="foo?x=1>2" className={cn("h-8", {b: 1})}> correctly tokenized — 1 className match with full {cn(...)} value
+
+### Round-2 review uncovered 9 findings total
+- 2 CRITICAL regressions (fixed in this 1.13.2)
+- 2 HIGH partial-fix (rewriteTagClassNames still had old lazy regex — fixed in 1.13.2)
+- 5 MEDIUM/LOW deferred (sidebar lg:sidebar variant detection, color edge cases, CHANGELOG version timestamps)
+
 ## [1.13.1] — 2026-06-07 (hotfix after deep code review)
 
 ### Fixed — 5 CRITICAL + 5 HIGH bugs surfaced by 7-angle adversarial review
