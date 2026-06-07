@@ -2,6 +2,55 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.14.3] — 2026-06-07 (round-6 adversarial collab found 5 more bugs)
+
+After /collab round-6 sparring (Opus + GPT-5.5 + Sonnet, 60+ min) targeting ONLY surfaces no prior round had probed, found 5 NEW bugs by deep probing. All fixed.
+
+### Fixed
+
+**BUG 1 [CRITICAL] — adjustForContrast wrong direction threshold** (lib/colorMath.mjs:77)
+- Bug: `towardWhite = bgLum < 0.5` picks wrong direction for bg lum 0.179-0.5 (typical UI grays: #808080=0.216, #999=0.329).
+- Probe: `adjustForContrast({r:128,g:128,b:128}, {r:128,g:128,b:128}, 4.5) = null` (silent skip on common gray)
+- Math: white-vs-gray128 = 3.949:1 (FAIL); black-vs-gray128 = 5.317:1 (PASS). Wrong direction → can never reach 4.5:1 → null.
+- Fix: replace threshold with `(1.05/(bgLum+0.05)) > ((bgLum+0.05)/0.05)` — picks correctly at the equicontrast point (~0.179).
+- 22 unit tests added (test/unit-colormath.mjs) to lock this regression class.
+
+**BUG 2 [HIGH] — runAutoImpeccable no timeout** (lib/escalate.mjs:270)
+- Probe: `grep -n 'timeout|setTimeout|SIGTERM' escalate.mjs` → 0 matches in runAutoImpeccable. claude CLI can hang on network → CI job never completes.
+- Fix: timeoutSec=600 default + SIGTERM + SIGKILL escalation 2s after (matching aiDiff pattern).
+
+**BUG 3 [HIGH] — parseColor doesn't handle CSS Color 4 syntax** (lib/colorMath.mjs:10)
+- `rgb(0 0 0 / 0.5)` (CSS Color 4 spaces+slash) returns null — modern CSS silently skipped from contrast checks.
+- Fix: extended RGB_RE to match space-separated form with optional slash-alpha.
+
+**BUG 4 [HIGH] — perfGate timeout logged as success** (lib/perfGate.mjs)
+- networkidle timeout on slow CI → catch block returned generic error → operator sees route in results but no failure → believes perf OK when page never loaded.
+- Fix: catch block now pushes `failures.push({route, fail: ['load-error: ...']})` so timeout surfaces in summary.
+- Bonus fix: INP threshold was wired but no INP observer — added `PerformanceObserver({type:'event', buffered:true, durationThreshold:40})`.
+
+**BUG 5 [MEDIUM] — scan.mjs unitless px false positives**
+- `fontSize: 1.5` (line-height/opacity-like ratios) was being flagged as 1.5px font — phantom `fluid-type-opportunity` issues emitted.
+- Fix: added `UNITLESS_NUMERIC_CSS_PROPS` set + `Number(val) < 2` threshold guard.
+
+### Test infrastructure
+
+**`test/unit-colormath.mjs` (22 assertions) wired into npm test**
+- Was committed by sonnet-3 (commit da76895) but NOT in package.json scripts — DEAD code in CI.
+- Fix: `test: ... && node test/unit-colormath.mjs` so regression locks actually run.
+
+### Added — 2 new regression fixtures (32 total)
+- regressions/11-gray128-contrast-direction (BUG 1)
+- regressions/12-css-color4-rgb-space (BUG 3)
+
+### Verified
+- **30/30 fixture tests pass** (was 28)
+- **12/12 smoke assertions pass**
+- **26/26 unit-colormath assertions pass** (was 0 — wired now)
+- **68/68 total pass**
+
+### Honest acknowledgment
+Round-6 found 5 more. Pattern continues: every round finds 4-6 new bugs. Operator's persistence with adversarial path keeps surfacing real bugs that would have shipped to users.
+
 ## [1.14.2] — 2026-06-07 (round-5 adversarial collab found 6 more bugs)
 
 After /collab round-5 sparring review (Opus + GPT-5.5 + Sonnet, 30+ min), found 6 NEW bugs by probing surfaces prior 4 rounds had not covered. All 6 fixed.

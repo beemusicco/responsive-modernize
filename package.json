@@ -1,6 +1,6 @@
 {
   "name": "responsive-modernize",
-  "version": "1.14.2",
+  "version": "1.14.3",
   "types": "types/run.d.mts",
   "description": "Bulletproof multi-viewport responsive audit + automatic modernization. Scans CSS/HTML/JSX/Vue/Svelte/Astro/CSS-in-JS/SCSS/Vanilla Extract for responsive anti-patterns, runs Playwright multi-engine runtime checks, proposes ranked fixes, applies safe atomic codemods (Utopia fluid type/space, safe-area-inset, Tailwind className edits, fixed-width overflow, image aspect-ratio, ...), verifies via pixelmatch + re-diagnose, escalates residuals to LLM agent via claude CLI subprocess.",
   "type": "module",
@@ -49,11 +49,12 @@
   },
   "scripts": {
     "run": "node run.mjs",
-    "test": "node test/run-fixtures.mjs && node test/smoke.mjs",
+    "test": "node test/run-fixtures.mjs && node test/smoke.mjs && node test/unit-colormath.mjs",
     "test:fixtures": "node test/run-fixtures.mjs",
     "test:smoke": "node test/smoke.mjs",
     "build:types": "tsc",
-    "prepublishOnly": "npm run build:types"
+    "prepublishOnly": "npm run build:types",
+    "test:unit": "node test/unit-colormath.mjs"
   },
   "dependencies": {
     "acorn": "^8.16.0",

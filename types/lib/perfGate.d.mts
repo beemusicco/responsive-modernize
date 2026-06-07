@@ -19,14 +19,20 @@ export function runPerfGate({ brief, briefDir, outDir, viewports }: {
     } | {
         route: any;
         error: any;
+        fail: string[];
         cwv?: undefined;
-        fail?: undefined;
     })[];
-    failures: {
+    failures: ({
         route: any;
         fail: string[];
         cwv: any;
-    }[];
+        error?: undefined;
+    } | {
+        route: any;
+        fail: string[];
+        error: any;
+        cwv?: undefined;
+    })[];
 } | {
     phase: string;
     skipped: boolean;

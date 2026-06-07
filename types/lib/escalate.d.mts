@@ -39,7 +39,8 @@ export function runEscalate({ brief, briefDir, outDir, verifyResult, postDiagnos
  *   - --dangerously-skip-permissions means agent edits without per-action prompts
  *   - typical run: 2-5 min wall-clock
  */
-export function runAutoImpeccable({ briefPath, briefDir }: {
+export function runAutoImpeccable({ briefPath, briefDir, timeoutSec }: {
     briefPath: any;
     briefDir: any;
+    timeoutSec?: number | undefined;
 }): Promise<any>;
