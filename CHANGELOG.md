@@ -2,6 +2,34 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.14.6] — 2026-06-07 (real-world bug from libro test)
+
+After live e2e test on libro frontend (Vite + React 19 + Tailwind v4), found 2 bugs:
+
+### Fixed
+
+**[HIGH] Apply phase globby missed dist/build/out exclusions** (lib/apply.mjs × 10 globby calls)
+- scan.mjs DEFAULT_CSS_PATTERNS includes `!dist/**`, `!build/**`, `!out/**`, `!.cache/**`, `!.turbo/**` — but apply.mjs had only `!node_modules/**, !.responsive-modernize/**, !.next/**`
+- Result: codemods like truncate-text-overflow targeted the BUILT BUNDLE (`dist/assets/index-DMdunfaZ.css`) as "largest CSS file" — modified build artifact that gets overwritten by next `vite build`
+- Plus add-pwa-manifest injected `<link rel=manifest>` into `dist/offline.html` (build output)
+- Fix: added `!dist/**`, `!build/**`, `!out/**`, `!.cache/**`, `!.turbo/**` to ALL apply.mjs globby calls (sed replacement, 10 instances)
+
+**[HIGH] tailwind-touch-target codemod gated --aggressive** (lib/apply.mjs:196)
+- Live repro on libro `CookieConsentBanner.jsx` Toggle component: codemod dropped `h-5 w-9` (20×36px) and appended `min-h-11 min-w-11` (44×44) → completely destroyed Toggle appearance + caused 6.77% pixel diff on /login + 3.89% on /pricing
+- Same class as v1.13 sidebar substring + v1.14.5 .group utility: codemod assumes class-name = semantic intent, fails on custom UI primitives where intentionally small dimensions are part of design
+- Fix: now requires `--aggressive` flag (consistent with layout-stack + form-stack + nav-hamburger)
+- Trade-off: legitimate small icon buttons (close X, error dismiss) lose auto-fix in default mode. Users on touch-target compliance can opt-in via `--aggressive` + review diff before commit.
+
+### Honest update — 9 rounds total now
+| Round | Bugs found | Surface |
+|---|---|---|
+| 1-7 | 46 | synthetic adversarial |
+| 8 (octanorm e2e) | 1 | .group Tailwind utility |
+| **9 (libro e2e)** | **2** | dist/ exclusion + touch-target over-aggression |
+| **TOTAL** | **49** | — |
+
+Real-world deployment surface keeps finding new bugs: same root cause class (class-name = semantic intent assumption), different concrete surfaces.
+
 ## [1.14.5] — 2026-06-07 (real-world bug from octanorm-adria test)
 
 After live e2e test on octanorm-adria production project (Next 16 + Tailwind, 216 components using `.group` className), discovered the truncate-text-overflow codemod injects global rules keyed on Tailwind utility class names.

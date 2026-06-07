@@ -1,6 +1,6 @@
 {
   "name": "responsive-modernize",
-  "version": "1.14.5",
+  "version": "1.14.6",
   "types": "types/run.d.mts",
   "description": "[ALPHA — research-grade, 7 review rounds found 46+ bugs, rate not plateauing] multi-viewport responsive audit + automatic modernization. Scans CSS/HTML/JSX/Vue/Svelte/Astro/CSS-in-JS/SCSS/Vanilla Extract for responsive anti-patterns, runs Playwright multi-engine runtime checks, proposes ranked fixes, applies safe atomic codemods (Utopia fluid type/space, safe-area-inset, Tailwind className edits, fixed-width overflow, image aspect-ratio, ...), verifies via pixelmatch + re-diagnose, escalates residuals to LLM agent via claude CLI subprocess.",
   "type": "module",
