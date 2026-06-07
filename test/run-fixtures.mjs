@@ -55,14 +55,26 @@ async function testLayoutGroup(group) {
     const inputPath = join(dir, inputName);
     const expectedPath = join(dir, `${name}.expected.${ext}`);
     try {
-      const {actual, expected} = await runCodemodAgainstFile({
+      const {actual, expected, edits} = await runCodemodAgainstFile({
         inputPath, expectedPath,
         codemodFn: group === 'regressions' && name.includes('sidebar') ? tailwindSidebarDrawerCodemod : tailwindLayoutStackCodemod,
         group,
       });
-      if (actual.trim() === expected.trim()) {
+      const inputContent = await readFile(inputPath, 'utf8');
+      // BUG-R7-06: detect silent no-op regression — codemod makes 0 edits but fixture expects
+      // a transform (expected != input). Only triggers when the fixture WAS written expecting
+      // a change; skip/false-positive fixtures (expected == input) are not flagged.
+      const isTransformGroup = group === 'layout-stack-safe' || (group === 'regressions' && name.includes('sidebar'));
+      const noOpRegression = isTransformGroup && edits === 0
+        && actual.trim() === inputContent.trim()
+        && expected.trim() !== inputContent.trim();
+      if (actual.trim() === expected.trim() && !noOpRegression) {
         console.log(`${GREEN}✓${RESET} ${group}/${name}`);
         pass++;
+      } else if (noOpRegression) {
+        console.log(`${RED}✗${RESET} ${group}/${name} — codemod no-op: 0 edits on transform fixture (regression?)`);
+        fail++;
+        failures.push({group, name, error: 'no-op: codemod made 0 edits on a transform fixture'});
       } else {
         console.log(`${RED}✗${RESET} ${group}/${name}`);
         const diff = simpleDiff(actual, expected);

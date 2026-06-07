@@ -8,8 +8,10 @@
 import {mkdir, writeFile, readFile, rm} from 'fs/promises';
 import {existsSync} from 'fs';
 import {spawn} from 'child_process';
+import {createServer} from 'http';
 import {fileURLToPath} from 'url';
 import {dirname, resolve, join} from 'path';
+import {runDiagnose} from '../lib/diagnose.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -105,6 +107,65 @@ async function runScan() {
   });
 }
 
+async function runRuntimeDiagnoseSmoke() {
+  const runtimeOut = join(FIXTURE, '.responsive-modernize-runtime');
+  await mkdir(runtimeOut, {recursive: true});
+  const html = `<!doctype html>
+<html>
+  <head>
+    <title>runtime smoke</title>
+    <style>
+      body { background: #000; color: #fff; }
+      button { background: #222; color: #fff; }
+      @keyframes transient-shrink {
+        from { transform: scale(.5); }
+        to { transform: scale(.5); }
+      }
+      #scaled-animated { animation: transient-shrink 10s linear infinite; }
+    </style>
+  </head>
+  <body>
+    <button id="scaled-static" style="width:60px;height:60px;transform:scale(.5)">Scaled</button>
+    <button id="scaled-animated" style="width:60px;height:60px">Animated</button>
+    <button id="small-bad" style="width:30px;height:30px">Bad</button>
+    <p id="contrast-ok">Readable white text on a black page.</p>
+    <picture>
+      <source srcset="/hero.webp" type="image/webp">
+      <img id="picture-img" src="/hero.png" alt="Hero" style="display:block;width:320px;height:auto">
+    </picture>
+  </body>
+</html>`;
+
+  const server = createServer((req, res) => {
+    if (req.url === '/hero.png' || req.url === '/hero.webp') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+    res.writeHead(200, {'content-type': 'text/html; charset=utf-8'});
+    res.end(html);
+  });
+
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+
+  try {
+    const {port} = server.address();
+    return await runDiagnose({
+      brief: {target: {url: `http://127.0.0.1:${port}`, routes: ['/']}},
+      briefDir: FIXTURE,
+      outDir: runtimeOut,
+      viewports: [{id: 'mobile-smoke', label: 'Mobile Smoke', width: 360, height: 640, deviceScaleFactor: 2, isMobile: true, hasTouch: true}],
+      engines: ['chromium'],
+      dryRun: false,
+    });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+}
+
 async function main() {
   log('building fixture…');
   await buildFixture();
@@ -143,6 +204,29 @@ async function main() {
   const {globby} = await import('globby');
   const tmps = await globby(['**/*.rm-tmp-*'], {cwd: FIXTURE, dot: true});
   assert(tmps.length === 0, `0 .rm-tmp-* leftover (got ${tmps.length})`);
+
+  try {
+    log('running runtime diagnose smoke…');
+    const diag = await runRuntimeDiagnoseSmoke();
+    const touchSamples = diag.issues
+      .filter((i) => i.kind === 'touch-target-too-small')
+      .flatMap((i) => i.data?.samples || []);
+    const imgMissing = diag.issues.filter((i) => i.kind === 'img-missing-dimensions');
+    const contrastSamples = diag.issues
+      .filter((i) => i.kind === 'low-color-contrast')
+      .flatMap((i) => i.data?.samples || []);
+    assert(touchSamples.some((s) => s.selector === '#small-bad'), 'runtime diagnose flags genuinely small tap target');
+    assert(touchSamples.some((s) => s.selector === '#scaled-static'), 'runtime diagnose flags static transform-shrunk tap target');
+    assert(!touchSamples.some((s) => s.selector === '#scaled-animated'), 'runtime diagnose ignores active transform animation snapshot');
+    assert(imgMissing.length === 0, `runtime diagnose skips <picture> image dimensions (got ${imgMissing.length})`);
+    assert(!contrastSamples.some((s) => s.selector === '#contrast-ok'), 'runtime diagnose respects black body background for contrast');
+  } catch (e) {
+    if (/Executable doesn't exist|browserType\.launch|Host system is missing dependencies/i.test(e.message || '')) {
+      log(`runtime diagnose smoke skipped: ${e.message.split('\n')[0]}`);
+    } else {
+      throw e;
+    }
+  }
 
   await rm(FIXTURE, {recursive: true, force: true});
 

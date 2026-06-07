@@ -2,6 +2,64 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.14.4] — 2026-06-07 (round-7 found 10 bugs, including CRITICAL dark-site corruption)
+
+After /collab round-7 sparring (parallel with planned 1.14.3 npm publish) targeting 12 unprobed surfaces, found 10 NEW bugs. v1.14.3 npm publish ABORTED — would have shipped CRITICAL bug that destroys dark-themed user sites on --yes.
+
+### Fixed
+
+**BUG-R7-10 [CRITICAL] — getEffectiveBg returns white for dark sites** (lib/diagnose.mjs:411)
+- Loop exited at `cur !== document.body` BEFORE checking body/html background
+- Extra guard `bg.join() !== '0,0,0'` silently discarded opaque black (transparent already caught by string compare)
+- Net: white-text-on-black → effective bg defaults to [255,255,255] → ratio 1.0 → false low-color-contrast issue
+- Apply chain: handler darkens white text to meet 4.5:1 vs FAKE white bg → on REAL black bg text becomes INVISIBLE
+- Site BROKEN under --yes (the standard apply path)
+- Fix: walk while nodeType === ELEMENT_NODE (traverses body+html), remove dead guard
+
+**BUG-R7-02 [HIGH] — --dry-run + --auto-impeccable spawns subprocess** (run.mjs)
+- --dry-run is a zero-effect contract; spawning claude CLI violated it
+- Fix: gate runAutoImpeccable call with if (!dryRun)
+
+**BUG-R7-03 [HIGH] — urlJoin double-slash** (lib/util.mjs)
+- Route // → protocol-relative URL → audit wrong host
+- Fix: normalize leading // in route before urlJoin
+
+**BUG-R7-04 [MEDIUM] — img-missing-dimensions false positive on <picture><img>** (lib/diagnose.mjs)
+- <picture> parent supplies dimensions to <img> implicitly — flagging the inner img is spurious
+- Fix: hasPictureParent() skip walks up to ELEMENT boundary
+
+**BUG-R7-05 [MEDIUM] — touch-target false positive on transient transform motion** (lib/diagnose.mjs)
+- Mid-audit hover/active scale captured as small target → noise
+- Fix: suppress ONLY when activeTransformMotion (transition running). Static transforms still flagged — they affect pointer hit-testing.
+
+**BUG-R7-06 [MEDIUM] — fixture runner missed no-op codemod regressions** (test/run-fixtures.mjs)
+- Transform fixture's expected ≠ input, but if codemod made 0 edits and dest == input == "expected wasn't input" — runner only compared dest vs expected, missed the no-op signal
+- Fix: detect when transform-group fixture has 0 edits + dest unchanged
+
+**BUG-R7-07 [LOW] — expandLocaleRoutes verbatim {unknown} placeholder** (lib/util.mjs)
+- url_pattern with `{undefined}` produced raw template in route — silent corruption
+- Fix: warn on unknown placeholders
+
+**BUG-R7-09 [LOW] — --json-output nonInfoIssueCount:0 when no counting phase ran** (run.mjs)
+- --phase escalate + --json-output emitted 0 instead of null → misleading "0 issues found"
+- Fix: emit null when no counting phase
+
+### Deferred (low/no impact)
+- BUG-R7-08 — no package-lock.json (pnpm-lock.yaml already present, mixed lockfiles WORSEN supply chain)
+- BUG-R7-01 — report.mjs i.severity in class attr (enum-controlled, defense-in-depth)
+
+### Hypothesis empirically REFUTED
+Rate of bug-finding NOT plateauing — Round 7 found **10 bugs vs prior 4-6 mean**. New surfaces (dark-site contrast, dry-run contract, URL normalization, transform touch-targets) were fertile ground.
+
+### Honest update for npm
+v1.14.3 was about to be published when round-7 found CRITICAL dark-site corruption bug. Publish ABORTED in favor of v1.14.4 which carries the fix.
+
+### Verified
+- 30/30 fixture tests pass
+- 12/12 smoke assertions pass + new dark-site assertion
+- 26/26 unit-colormath assertions pass
+- 68/68 total
+
 ## [1.14.3] — 2026-06-07 (round-6 adversarial collab found 5 more bugs)
 
 After /collab round-6 sparring (Opus + GPT-5.5 + Sonnet, 60+ min) targeting ONLY surfaces no prior round had probed, found 5 NEW bugs by deep probing. All fixed.

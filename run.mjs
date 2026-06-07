@@ -213,7 +213,8 @@ See https://github.com/beemusicco/responsive-modernize`);
       else if (phase === 'escalate') {
         results.escalate = await runEscalate({brief, briefDir, outDir, verifyResult: results.verify});
         // Fix 6: production auto-spawn via claude CLI subprocess (opt-in).
-        if (autoImpeccable && results.escalate?.briefPath) {
+        // BUG-R7-02: guard with !dryRun — dry-run must be zero-effect, subprocess can modify files.
+        if (!dryRun && autoImpeccable && results.escalate?.briefPath) {
           results.autoImpeccable = await runAutoImpeccable({briefPath: results.escalate.briefPath, briefDir});
           // Re-diagnose after subprocess agent edits for delta measurement
           try {
@@ -249,11 +250,14 @@ See https://github.com/beemusicco/responsive-modernize`);
       const pkg = JSON.parse(await (await import('fs/promises')).readFile(join(__dirname, 'package.json'), 'utf8'));
       pkgVersion = pkg.version;
     } catch {}
+    // BUG-R7-09: if neither 'propose' nor 'scan' phase ran, issueCount=0 is not a health signal.
+    const hasCountingPhase = !!(results.propose || results.scan);
     const summary = {
       version: pkgVersion,
       generatedAt: new Date().toISOString(),
       durationSec: parseFloat(dt),
-      nonInfoIssueCount: issueCount,
+      nonInfoIssueCount: hasCountingPhase ? issueCount : null,
+      noCountingPhaseRan: !hasCountingPhase || undefined,
       outDir,
       counts: results.propose?.counts || null,
       bucketSummary: results.propose?.bucketSummary || null,
