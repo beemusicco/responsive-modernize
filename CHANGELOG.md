@@ -2,6 +2,28 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.9.0] — 2026-06-07
+
+### Added — autonomous desktop→mobile layout transform
+
+**Layout responsive detection** (`layout-not-responsive` runtime check):
+- Scans every visible element with `grid-cols-N` (N≥2) or `flex-row` (≥3 children)
+- Flags those without responsive variant prefix (`md:` / `sm:` / etc.)
+- Only fires on mobile-sized viewports (≤430px)
+
+**`tailwind-layout-stack` codemod** (handler 15):
+- `grid-cols-N` → `grid-cols-1 md:grid-cols-N`
+- `flex-row` → `flex-col md:flex-row`
+- Safety guard: skips classes matching `menu|nav|navbar|carousel|swiper|marquee|ticker|tabs|breadcrumb|toolbar` — these are intentionally horizontal even on mobile (verified after solaronics marquee bug)
+
+**Enhanced agent brief** (`escalate.mjs` playbook):
+- New `layout-not-responsive` kind with explicit fix recipe + DO-NOT-touch guidance (nav, menu, carousel)
+
+### Closes the gap toward 'bulletproof desktop→mobile without human'
+Previous versions detected technical issues (touch, font, safe-area, …) but did NOT transform layout structure. v1.9 closes that gap for the most common pattern: hardcoded multi-column grids and horizontal flex rows.
+
+Verified 2026-06-07 on synthetic broken-layout fixture: grid-cols-3 + flex-row → grid-cols-1 md:grid-cols-3 + flex-col md:flex-row. `<nav class="menu">` correctly preserved.
+
 ## [1.8.1] — 2026-06-07
 
 ### Fixed (code review pass)
