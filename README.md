@@ -24,6 +24,82 @@ phase 8 escalate   ESCALATION-BRIEF.md + [RM-ESCALATE] marker
 
 ---
 
+## Honest positioning (transparent disclosure)
+
+**This tool IS**:
+- A maintained MIT alternative in the px-to-rem / px-to-viewport / responsive-codemod sub-niche, dominated today by abandonware (`postcss-pxtorem` stalled Jan 2024 / 202k weekly DLs / classified "Inactive", `postcss-px-to-viewport` last release July 2019 / 7yr stale, `skovy/css-codemod` dead since Feb 2022)
+- A codemod + audit + iterate loop integrating scan → diagnose → auto-fix → verify in one CLI — a workflow that today requires gluing 4+ separate tools (`design-auditor` + `jscodeshift` + `axe-core` + `BackstopJS` + `Lighthouse CI`)
+- A Playwright-based runtime auditor with the same technical approach as `design-auditor` (PashaSchool, MIT) plus auto-fix codemods + Core Web Vitals that audit-only tools don't ship
+
+**This tool IS NOT** (verified via 106-agent deep adversarial research, claims refuted 0-3):
+- ❌ A **unique** unified pipeline — the components all exist separately as established tools; this just integrates them
+- ❌ A **$0 cost differentiator** — `design-auditor`, `Lighthouse`, `Playwright`, `axe-core`, `BackstopJS` are also $0 MIT/Apache
+- ❌ A **Fortune-500 / enterprise SaaS replacement** — no SLA, no SOC2/GDPR docs, no support contract, no community trust signals yet, no AI-powered visual diffing dashboard like Percy Visual Review Agent (Oct 2025) / Applitools Eyes 10.22 (Jan 2026) / TestMu Smart Ignore set as the 2026 paid-SaaS baseline
+
+**Best fit**: solo developers + small agencies who want one CLI for the responsive codemod + audit + iterate loop without managing 4 separate tools. Codemods and runtime checks are atomic and idempotent. The visual-diff gap vs Percy/Applitools is partially closed by `--ai-diff` (LLM-judge over pixelmatch diffs to filter intended improvements).
+
+See [Comparison with related tools](#comparison-with-related-tools) below for the verified head-to-head matrix.
+
+---
+
+## Comparison with related tools
+
+Verified against primary sources via 106-agent adversarial research (2026-06-07). Cells marked ✅ are independently confirmed, ⚠️ partial, ❌ missing.
+
+| Feature | responsive-modernize | design-auditor | Lighthouse CI | axe-core | BackstopJS | Percy / Applitools | postcss-pxtorem | polypane |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Runtime audit (Playwright) | ✅ | ✅ | ✅ | ✅ (engine) | ✅ | ✅ | ❌ | ✅ |
+| Auto-fix codemods | ✅ 24 | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ px-only | ⚠️ clipboard suggest |
+| Core Web Vitals (LCP/INP/CLS) | ✅ | ❌ | ✅ | ❌ | ❌ | ⚠️ | ❌ | ⚠️ |
+| WCAG (contrast, focus, target) | ✅ 17 checks | ⚠️ | ⚠️ axe-subset | ✅ canonical | ❌ | ⚠️ | ❌ | ✅ 80+ |
+| Multi-stack file types | ✅ 13 | ⚠️ | ❌ | ❌ | ❌ | ❌ | ❌ CSS | ❌ |
+| AI-powered visual diff | ✅ v1.13 | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| Web dashboard / team review | ❌ | ❌ | ⚠️ | ⚠️ | ⚠️ HTML | ✅ | ❌ | ❌ |
+| CI/CD GitHub Actions integration | ✅ v1.13 | ⚠️ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ❌ |
+| MIT / Apache OSS | ✅ | ✅ | ✅ Apache | ✅ MPL | ✅ | ❌ SaaS | ✅ (abandonware) | ❌ paid |
+| Cost | $0 + optional Claude OAuth | $0 | $0 | $0 | $0 | $$$$ | $0 | $9/user/mo |
+| Maintenance status | ⚠️ new (June 2026) | ✅ | ✅ | ✅ | ✅ (since 2014) | ✅ | ❌ stalled Jan 2024 | ✅ |
+| Community trust (stars/DLs) | ⚠️ new | 🆕 | ✅ Google | ✅ 4B+ DLs | ✅ 7.1k★ | ✅ enterprise | ⚠️ 202k/wk DLs | ✅ |
+
+**Honest take**: this tool wins on the auto-fix codemod axis + multi-stack detection + CWV+a11y+visual-diff bundled in one CLI. It loses on community trust, dashboard, and feature breadth vs paid SaaS. Compare its narrow strength axis against your actual workflow before adopting.
+
+---
+
+## CI/CD example (GitHub Actions)
+
+```yaml
+# .github/workflows/responsive-modernize.yml
+name: responsive-modernize audit
+
+on: pull_request
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm install -g pnpm && pnpm install
+      - run: npx playwright install chromium --with-deps
+      - run: npm run build && npm run start &
+      - run: sleep 5
+      - run: node /path/to/responsive-modernize/run.mjs --yes --json-output > audit.json
+      - name: Fail on regressions
+        run: |
+          jq -e '.regressions == 0' audit.json || exit 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: responsive-audit
+          path: .responsive-modernize/REPORT.html
+```
+
+Exit codes: `0` (clean), `1` (regressions), `42` (port collision), `43` (infrastructure down).
+
+JSON schema: `{version, residuals, regressions, applied, skipped, phases}` — see `examples/ci-output.json`.
+
+---
+
 ## Why?
 
 Most "responsive" sites pass visual inspection on the dev's monitor and break on a 360-px Android. Existing tools either audit-only (Lighthouse, axe) or visual-diff (Percy, Chromatic). None do **scan → diagnose → codemod → iterate → escalate** as one pipeline.

@@ -2,6 +2,40 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.13.0] — 2026-06-07
+
+### Added — closing 2026 SaaS feature floor (Percy/Applitools/TestMu parity)
+
+After 106-agent deep-research adversarial verification surfaced AI-diffing as the dominant 2026 visual-regression market shift (Percy Visual Review Agent Oct 2025, Applitools Eyes 10.22 Jan 2026, TestMu Smart Ignore 95% false-positive reduction), shipped local LLM-judge fallback that closes the gap at $0 marginal cost.
+
+**lib/aiDiff.mjs primitive**:
+- Spawns claude --print subprocess for each above-threshold pixel diff
+- Subprocess reads BEFORE/AFTER/DIFF screenshots (via Read tool)
+- Returns structured JSON verdict: {isRegression, severity, reason, confidence}
+- Graceful fallback: if claude CLI missing -> skipped: 'no-claude'; if parse fails -> skipped: 'parse-error'; if timeout -> SIGTERM + skipped: 'timeout'
+
+**verify.mjs integration**:
+- Opt-in via brief.aiDiff.enabled (default OFF)
+- Configurable timeoutSec (default 60) and maxJudge cap (default 10)
+- Reclassifies pixel regressions: those where AI says NOT a regression filtered from real-regression count
+- Real-world value: Tailwind grid-cols-3 -> grid-cols-1 md:grid-cols-3 codemod creates 30%+ pixel diff on mobile but is INTENDED -> AI judge filters out -> no false alarm
+
+**README transparency overhaul**:
+- New "Honest positioning" section: explicit ❌ disclosures (NOT unique pipeline, NOT $0 differentiator, NOT enterprise-ready) verified via adversarial research
+- New "Comparison with related tools" matrix vs design-auditor, Lighthouse CI, axe-core, BackstopJS, Percy/Applitools, postcss-pxtorem, polypane
+- New "CI/CD example (GitHub Actions)" with explicit exit codes (0/1/42/43) + JSON schema
+
+### Coverage uplift vs v1.12
+- New phase 6 sub-step: AI-judge (claude --print subprocess)
+- New primitive: lib/aiDiff.mjs
+- Brief schema field: aiDiff: {enabled, timeoutSec, maxJudge}
+
+### Verified
+AI-diff module smoke test:
+- Module exports aiJudgeDiff correctly
+- Missing PNG -> graceful {skipped: 'missing-png'} (no crash)
+- Subprocess never hangs (timeout SIGTERM works)
+
 ## [1.12.0] — 2026-06-07
 
 ### Added — final detect-only gap closed: nav hamburger codemod
