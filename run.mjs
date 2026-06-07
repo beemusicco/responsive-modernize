@@ -38,6 +38,7 @@ import {runApply} from './lib/apply.mjs';
 import {runVerify} from './lib/verify.mjs';
 import {runReport} from './lib/report.mjs';
 import {runEscalate, runAutoImpeccable} from './lib/escalate.mjs';
+import {runPerfGate} from './lib/perfGate.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -103,7 +104,7 @@ async function main() {
   const engines = resolveEngines(brief, deep);
 
   // Resolve phases
-  const PHASES = ['scan', 'baseline', 'diagnose', 'propose', 'apply', 'verify', 'report', 'escalate'];
+  const PHASES = ['scan', 'baseline', 'perf-gate', 'diagnose', 'propose', 'apply', 'verify', 'report', 'escalate'];
   let selected;
   if (phasesArg) {
     const want = String(phasesArg).split(',').map((s) => s.trim());
@@ -142,6 +143,7 @@ async function main() {
     try {
       if (phase === 'scan') results.scan = await runScan({brief, briefDir, outDir});
       else if (phase === 'baseline') results.baseline = await runBaseline({brief, briefDir, outDir, viewports, engines, deep, dryRun});
+      else if (phase === 'perf-gate') results.perfGate = await runPerfGate({brief, briefDir, outDir, viewports});
       else if (phase === 'diagnose') results.diagnose = await runDiagnose({brief, briefDir, outDir, viewports, engines, dryRun});
       else if (phase === 'propose') results.propose = await runPropose({brief, briefDir, outDir});
       else if (phase === 'apply') {

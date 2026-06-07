@@ -64,6 +64,35 @@
       "description": "Color schemes to baseline. Default ['light']. --deep adds 'dark'.",
       "default": ["light"]
     },
+    "networkThrottle": {
+      "type": "string",
+      "enum": ["off", "slow3g", "fast3g"],
+      "description": "Network throttling for perf-gate phase. Default 'off'. 'slow3g' = 400kbps + 400ms latency.",
+      "default": "off"
+    },
+    "dismissCookieBanner": {
+      "type": "boolean",
+      "description": "Auto-click cookie consent buttons in baseline phase (recognises EN+SI common patterns). Default true.",
+      "default": true
+    },
+    "flowSimulation": {
+      "type": "object",
+      "description": "Optional headless flow simulation — sequence of actions to perform before screenshot.",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "action": {"type": "string", "enum": ["click", "tap", "type", "wait", "scroll"]},
+              "selector": {"type": "string"},
+              "value": {"type": "string"},
+              "ms": {"type": "integer"}
+            }
+          }
+        }
+      }
+    },
     "out": {"type": "string", "default": ".responsive-modernize"}
   }
 }
