@@ -2,6 +2,20 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.10.1] — 2026-06-07
+
+### Fixed — autonomous audit completion (5 gaps from prior session honestly noted)
+
+- table-to-cards is COMPLETE: now adds class rm-card-on-mobile to <table> + data-label="<th>" to each <td> in HTML, alongside the CSS rule. Previously only CSS injected (cells empty on mobile).
+- add-pwa-manifest (handler 20): generates manifest.webmanifest + injects <link rel=manifest> in <head>.
+- add-apple-touch-icon (handler 21): sharp resizes largest local image to 180x180, writes apple-touch-icon.png, injects <link rel=apple-touch-icon>.
+- Element-level visual regression in verify: when total-page diff exceeds threshold, identifies which top-level sections changed (sections/articles/headers/footers/nav/main) via bounding-box capture.
+- Bug fix: table-to-cards handler crashed with 'globby already declared' (double const in same scope).
+
+### Coverage uplift vs v1.10
+- Handlers: 19 -> 21
+- detect-only kinds with auto-fix: 5 -> 3 (closed pwa-manifest + apple-touch-icon)
+
 ## [1.10.0] — 2026-06-07
 
 ### Added — 14 gaps closed for bulletproof autonomous E2E
