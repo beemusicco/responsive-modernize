@@ -1,14 +1,29 @@
 # responsive-modernize
 
-> Bulletproof multi-viewport responsive audit + automatic modernization for any web stack.
+> Multi-viewport responsive audit + automatic modernization for any web stack.
 
 [![npm version](https://img.shields.io/npm/v/responsive-modernize.svg)](https://www.npmjs.com/package/responsive-modernize)
 [![npm downloads](https://img.shields.io/npm/dw/responsive-modernize.svg)](https://www.npmjs.com/package/responsive-modernize)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
+[![Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/beemusicco/responsive-modernize/blob/main/CHANGELOG.md)
 [![GitHub stars](https://img.shields.io/github/stars/beemusicco/responsive-modernize?style=social)](https://github.com/beemusicco/responsive-modernize/stargazers)
 
-`responsive-modernize` is a CLI primitive that detects responsive anti-patterns across your site (multi-viewport, multi-engine), proposes ranked fixes, applies safe codemods atomically with backup, verifies via pixel-match + re-diagnose, and ships a client-ready report. When residuals remain that need semantic JSX understanding, it can escalate to an LLM agent automatically.
+## ⚠️ ALPHA — research-grade tool, expect bugs
+
+This tool **rewrites your source files**. Seven adversarial multi-agent code reviews (Opus + GPT-5.5 + Sonnet, sparring mode) found **46+ real bugs** over 1.13.0 → 1.14.4 — and the bug-finding rate **has NOT plateaued** (round-7 found 10, highest yet). Empirically, expect another 4-10 bugs in the next review round.
+
+**What this means for you**:
+- ✅ **Safe to use**: detect / dry-run / audit modes. `responsive-modernize` (no flags) only reads + reports.
+- ⚠️ **Use with backup**: `--yes` (apply codemods). Atomic backup created automatically in `.responsive-modernize/backup/`, but git-commit first anyway.
+- ❌ **Do NOT run in CI without manual review**: codemod output may need adjustment for your specific framework / file shape. Treat as a productivity boost, not a "trust and merge" tool.
+- 🔒 **Layout codemods are opt-in** (`--enable-layout-codemods`) by default because past reviews caught structural bugs in this exact path.
+
+When this README replaces "ALPHA" with "BETA", it means a review round found 0 new bugs. Currently rounds find 4-10 each. Track at [CHANGELOG.md](./CHANGELOG.md).
+
+---
+
+`responsive-modernize` is a CLI that detects responsive anti-patterns across your site (multi-viewport, multi-engine), proposes ranked fixes, applies safe codemods atomically with backup, verifies via pixel-match + re-diagnose, and ships a client-ready report. When residuals remain that need semantic JSX understanding, it can escalate to an LLM agent automatically.
 
 ```
 phase 1 scan       CSS + HTML + SFC + CSS-in-JS + SCSS + Vanilla Extract AST
