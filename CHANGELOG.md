@@ -2,6 +2,48 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.14.1] — 2026-06-07 (adversarial collab found 4 real bugs)
+
+After /collab adversarial sparring review (Opus + GPT-5.5 + Sonnet, sparring mode, 22min), 4 real bugs found via PROVEN node -e probes:
+
+### Fixed
+
+**C1 [HIGH] — JSXNamespacedName attr corruption** (lib/jsxWalker.mjs:81)
+- Shortcut `attr.name && attr.name.name ? attr.name.name : nameOf(attr.name)` returned the JSXIdentifier OBJECT for namespaced attrs (xlink:href, xmlns:x), then string-concatenated as "[object Object]" in attr reconstruction.
+- Probe: `<svg><use xlink:href="#icon"/></svg>` → corrupt `<use [object Object]="#icon"/>`
+- Fix: always go through nameOf() — never the shortcut.
+
+**C3 [HIGH] — PascalCase nav components bypass guard** (lib/tailwindCodemod.mjs:343)
+- SEMANTIC_HORIZONTAL_PARENTS only matched lowercase tags ('nav', 'menu', 'header', 'footer').
+- React apps use PascalCase: `<Navbar>`, `<NavMenu>`, `<SiteHeader>`, `<MainNav>`. Guard bypassed → div inside got grid-cols stacked → mobile nav broken (same class as the v1.13 viagoshop bug, missed by AST walker because we only checked lowercase tags).
+- Fix: added PASCAL_NAV_RE heuristic for PascalCase tags matching Nav|Menu|Header|Footer|Topbar|Sidebar|Toolbar|Breadcrumb (case-insensitive).
+- Configurable via `brief.semanticHorizontalRe` regex override for edge cases.
+
+**LATENT-CRITICAL — walkJSX overlapping edits** (lib/jsxWalker.mjs:148)
+- Edit loop used cursor tracking; when outer edit spans nested edit, `inner.start < cursor` → `src.slice(cursor, inner.start) = ''` but `inner.replacement` still appended → JSX garbage output.
+- Current codemods never return fullReplacement so this was latent. Future codemods using the documented API would have hit it.
+- Fix: skip overlapping edits, return droppedOverlaps count for caller visibility.
+
+**MEDIUM — TS-syntax silent no-op** (lib/tailwindCodemod.mjs)
+- .tsx files with TypeScript-only syntax (decorators, satisfies, generics like `<Comp<MyType>`) fail acorn-jsx parse → parseError swallowed → 0 edits silently. "Failure structurally isomorphic to success."
+- Fix: emit `console.warn('[rm:jsx-parse] skipped FILE: REASON')` so operator sees silently-skipped files in CI logs.
+
+### Added — 4 new regression fixtures (26 total now)
+- regressions/06-pascalcase-Navbar-component (C3)
+- regressions/07-pascalcase-SiteHeader-component (C3)
+- className-edges/05-svg-xlink-href (C1)
+- jsxWalker/05-overlapping-edits-dropped (latent overlap)
+
+### Verified
+- 24/24 fixture tests pass
+- 12/12 smoke assertions pass
+- xlink:href attr reconstructed correctly
+- div inside <Navbar> correctly blocked (ancestor guard fires)
+- All on real adversarial probes, not synthetic.
+
+### Honest acknowledgment
+"100% production ready" claim in v1.14.0 was overconfident. Operator's "a si zihr" challenge sprožil this round — found real bugs (C1+C3 RPN 576+315 in FMEA from collab team). This release closes them. Two more (path traversal hardening via apply.mjs:718, JSX-in-attr undercoverage) deferred as non-blocking (gated by user-crafted propose.json, or undercoverage not corruption).
+
 ## [1.14.0] — 2026-06-07 (production-grade release)
 
 ### Added — first production-ready release
