@@ -92,6 +92,19 @@ async function checkPlaywright() {
 }
 
 async function main() {
+  // v1.13.1: early --version/--help handlers (was silently ignored, broke CI version detection).
+  if (ARGS.includes('--version') || ARGS.includes('-v')) {
+    const pkg = await readJSON(join(__dirname, 'package.json'));
+    console.log(pkg.version);
+    process.exit(0);
+  }
+  if (ARGS.includes('--help') || ARGS.includes('-h')) {
+    console.log(`responsive-modernize — bulletproof responsive audit + auto-modernize
+Usage: responsive-modernize [--yes] [--aggressive] [--deep] [--auto-impeccable] [--dry-run] [--phase N|name[,N|name…]] [--brief path]
+       responsive-modernize --version | --help
+See https://github.com/beemusicco/responsive-modernize`);
+    process.exit(0);
+  }
   const t0 = Date.now();
   const {brief, briefDir} = await loadBriefOrSynth();
   const merged = defaults(brief);
@@ -111,7 +124,8 @@ async function main() {
     selected = want.map((w) => {
       if (PHASES.includes(w)) return w;
       const idx = parseInt(w, 10);
-      if (!isNaN(idx) && idx >= 1 && idx <= 7) return PHASES[idx - 1];
+      // v1.13.1 FIX: was capped at 7, but PHASES has 9 entries (scan…escalate).
+      if (!isNaN(idx) && idx >= 1 && idx <= PHASES.length) return PHASES[idx - 1];
       throw new Error(`unknown phase: ${w}`);
     });
   } else {

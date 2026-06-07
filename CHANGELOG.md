@@ -2,6 +2,39 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.13.1] — 2026-06-07 (hotfix after deep code review)
+
+### Fixed — 5 CRITICAL + 5 HIGH bugs surfaced by 7-angle adversarial review
+
+**CRITICAL (codemod-breaking on user JSX):**
+- tailwindCodemod.mjs: NAV_RE lazy regex replaced by findClosingTag() balanced-tag walker. Was truncating on nested nav OR string literals containing '</nav>' → JSX corruption.
+- tailwindCodemod.mjs: CLASSNAME_ATTR_RE lazy regex replaced by iterateClassNameAttrs() balanced-brace walker. Was breaking on className={cn("x", {a: 1})} → truncated attribute.
+- apply.mjs:300 fix-low-color-contrast idempotency check was looking for 'var(--rm-contrast-fixed)' but writing '/* --rm-contrast-fixed */' → re-applied on every iteration.
+- apply.mjs:298 fix-low-color-contrast used .includes() substring match → polluted unrelated CSS rules (.text matched .text-color, .text-blue-500, etc.). Now exact selector match via rule.selectors getter.
+- tailwindCodemod.mjs:125 makeSidebarMobileDrawer word boundary matched 'text-sidebar-icon' as false positive → hid non-sidebar elements on mobile. Now exact token match.
+
+**HIGH:**
+- verify.mjs:154 aiJudge skipped codes (no-claude/timeout/parse-error) were counted as 'confirmed real regressions'. Now bucketed separately as 'inconclusive'.
+- apply.mjs:347 add-focus-visible-rules could produce :focus-visible:focus-visible on selectors with both. Added guard.
+- apply.mjs:294 fix-low-color-contrast assumed white background, broke dark theme sites. Now reads detected bg from diagnose sample.
+- run.mjs:114 --phase numeric parser capped at 7 but PHASES has 9. Now uses PHASES.length.
+- package.json: 'remotion.config.ts' phantom in files field, file did not exist. Removed.
+
+**MEDIUM:**
+- baseline.mjs:129 dropped Playwright-only 'button:has-text()' selector causing silent SyntaxError in querySelector. Text-walk fallback covers it.
+- aiDiff.mjs:74 added SIGKILL escalation 2s after SIGTERM to prevent zombie subprocesses.
+
+**Other:**
+- diagnose.mjs:394 contrast samples now include detected bg + fg colors for apply-handler.
+- run.mjs added --version / -v / --help / -h early-exit handlers.
+
+### Verified
+- findBalancedBrace correctly extracts {cn("x", {a:1, b:2})} as single value
+- findClosingTag returns correct end on nested <nav><div><nav></nav></div></nav>
+- Card with text-sidebar-icon NOT modified (false positive fixed)
+- Real <aside className="sidebar"> still gets hidden lg:block
+- --version prints 1.13.1
+
 ## [1.13.0] — 2026-06-07
 
 ### Added — closing 2026 SaaS feature floor (Percy/Applitools/TestMu parity)
