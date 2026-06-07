@@ -110,7 +110,7 @@ In the `.responsive-modernize/` folder (automatically gitignored):
 ├── sprite-verify.png        ← "after" image — if you ran --yes
 ├── baseline/                ← screenshot of every page × every viewport
 ├── backup/                  ← original files before fixes
-└── ESCALATION-BRIEF.md      ← prompt for the /impeccable agent
+└── ESCALATION-BRIEF.md      ← self-contained prompt for any LLM agent (Claude Code subprocess by default)
 ```
 
 **Main artifact**: `REPORT.html` — open it in Safari/Chrome. You see scorecards:
@@ -255,7 +255,7 @@ node ~/.openclaw/scripts/responsive-modernize/run.mjs --yes --auto-impeccable
 Result (verified 2026-06-07):
 - Pre-apply: 154 issues
 - After codemod: 6 issues
-- After `/impeccable` agent: ~10 files touch-target fixes, 79% touch-target hit reduction
+- After Claude Code agent: ~10 files touch-target fixes, 79% touch-target hit reduction
 
 Client gets:
 - `REPORT.html` with before/after images

@@ -47,6 +47,20 @@ npx playwright install chromium webkit firefox
 
 Optional: `npm link` to expose `responsive-modernize` globally.
 
+### Optional dependency for `--auto-impeccable`
+
+The `--auto-impeccable` flag spawns the `claude` CLI ([Claude Code](https://claude.ai/code)) as a subprocess to handle residual responsive issues that need semantic JSX understanding. If you want to use it:
+
+```bash
+# macOS:
+brew install claude  # or download from https://claude.ai/code
+claude --login       # authenticate via OAuth ($0 marginal on subscription)
+```
+
+Without `claude` CLI installed, the rest of the tool works fine — `--auto-impeccable` becomes a no-op with a clear log message. ESCALATION-BRIEF.md is still generated so you (or any other LLM agent) can handle residuals manually.
+
+Note: `/impeccable` references in docs are a naming convention from the author's internal stack — there is no openclaw or `/impeccable` skill required. The escalation prompt is self-contained in ESCALATION-BRIEF.md.
+
 ---
 
 ## Quick start

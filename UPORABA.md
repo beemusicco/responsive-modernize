@@ -108,7 +108,7 @@ V mapi `.responsive-modernize/` (avtomatsko skrita pred Gitom):
 ├── sprite-verify.png        ← slika "po" — če si zagnal --yes
 ├── baseline/                ← screenshot vsake strani × vsakega zaslona
 ├── backup/                  ← originalne datoteke pred popravki
-└── ESCALATION-BRIEF.md      ← navodilo za /impeccable agenta
+└── ESCALATION-BRIEF.md      ← samostojni prompt za poljubnega LLM agenta (Claude Code podproces privzeto)
 ```
 
 **Glavna stvar**: `REPORT.html` — odpri jo v Safariju/Chromu. Vidiš ščitke:
@@ -253,7 +253,7 @@ node ~/.openclaw/scripts/responsive-modernize/run.mjs --yes --auto-impeccable
 Rezultat (preverjeno 2026-06-07):
 - Pre-apply: 154 napak
 - Po code-fix: 6 napak
-- Po `/impeccable` agentu: ~10 datotek touch-target popravkov, 79% redukcija touch-target hits
+- Po Claude Code agentu: ~10 datotek touch-target popravkov, 79% redukcija touch-target hits
 
 Stranka dobi:
 - `REPORT.html` s pred/po slikami

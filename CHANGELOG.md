@@ -44,7 +44,7 @@ Object-style scanner: `stylex.create({...})`, `css({...})`, `styled('div', {...}
 ### Coverage uplift vs v1.7
 - Stack: 6 → **11** stacks (added Stylex, Panda, Stitches, Linaria, Qwik)
 - Responsive + a11y checks: 80% → **95%** (added focus-visible, forced-colors, RTL, PWA manifest)
-- Handlers: 15 (unchanged — these are detect-and-route to /impeccable for semantic fixes)
+- Handlers: 15 (unchanged — these are detect-and-route to LLM agent (Claude Code subprocess via --auto-impeccable) for semantic fixes)
 
 **Coverage status: 95%+ across all dimensions — publish-ready.**
 
