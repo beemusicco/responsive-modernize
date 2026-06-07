@@ -23,7 +23,7 @@ echo '{
 node /path/to/responsive-modernize/run.mjs --yes
 ```
 
-## Residuals → /impeccable agent
+## Residuals → LLM agent escalation
 
 For semantic JSX restructuring (touch-targets that don't match the simple `h-N` regex, e.g. dense desktop nav at `py-1`), the orchestrator gets an `ESCALATION-BRIEF.md` and either:
 
