@@ -2,6 +2,31 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.12.0] — 2026-06-07
+
+### Added — final detect-only gap closed: nav hamburger codemod
+
+After /discover-tools surfaced no existing solution (result=none), invented a pure-CSS hamburger pattern using Tailwind peer-checked: modifier + native checkbox state (NO React useState needed).
+
+**tailwind-nav-hamburger handler (#24)** — gated --aggressive (layout-impacting):
+- Detects <nav> with ≥5 link items (<a>, <Link>, <button>)
+- Wraps children in <div className="hidden peer-checked:flex flex-col md:flex md:flex-row">
+- Prepends hidden checkbox + visible label hamburger button
+- Pure HTML/CSS state — works without JavaScript
+
+Idempotent via data-rm-hamburger attribute + rm-nav-toggle ID markers.
+
+### Coverage uplift vs v1.11
+- Handlers: 23 -> 24
+- Detect-only kinds with no auto-fix: 1 -> 0 (ZERO remaining)
+
+### What this closes
+This is the final autonomous codemod for "desktop layout -> mobile that works on all devices per 2026 guidelines". Every previously-detected runtime issue now has a corresponding auto-fix path. The only remaining residuals are:
+1. Brand-specific design polish (handled by --auto-impeccable LLM agent with .claude-stack.json context)
+2. Custom CSS Grid template-areas (manual UI redesign decision)
+
+Smoke verified: <nav> with 6 <a> children -> wrapped in checkbox+label+peer-checked container. Idempotency holds on re-run.
+
 ## [1.11.0] — 2026-06-07
 
 ### Added — close final 3 known gaps (autonomous brand-aware fixes)
