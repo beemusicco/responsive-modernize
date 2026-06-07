@@ -2,8 +2,11 @@
 
 > Bulletproof multi-viewport responsive audit + automatic modernization for any web stack.
 
+[![npm version](https://img.shields.io/npm/v/responsive-modernize.svg)](https://www.npmjs.com/package/responsive-modernize)
+[![npm downloads](https://img.shields.io/npm/dw/responsive-modernize.svg)](https://www.npmjs.com/package/responsive-modernize)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node 20+](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](https://nodejs.org)
+[![GitHub stars](https://img.shields.io/github/stars/beemusicco/responsive-modernize?style=social)](https://github.com/beemusicco/responsive-modernize/stargazers)
 
 `responsive-modernize` is a CLI primitive that detects responsive anti-patterns across your site (multi-viewport, multi-engine), proposes ranked fixes, applies safe codemods atomically with backup, verifies via pixel-match + re-diagnose, and ships a client-ready report. When residuals remain that need semantic JSX understanding, it can escalate to an LLM agent automatically.
 
