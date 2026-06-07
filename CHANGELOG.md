@@ -2,6 +2,46 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.13.3] — 2026-06-07 (production-readiness round)
+
+### Changed (breaking opt-in default)
+
+**Layout codemods now OFF by default** — opt-in via brief.enableLayoutCodemods=true OR --enable-layout-codemods.
+
+After /think production-readiness analysis + real-world dry-run on operator's
+viagoshop-v2 + solaronics-si + octanorm-adria production projects, found
+CRITICAL bug pattern: tailwind-layout-stack guard checks className tokens for
+"menu|nav|navbar|..." but utility-only Tailwind keeps semantic context in
+parent <nav>/<table> HTML tags (not className). On viagoshop-v2 mobile-bottom-nav,
+the codemod would transform grid-cols-4 md:hidden → grid-cols-1 md:grid-cols-4 md:hidden,
+making the nav INVISIBLE on tablet+ desktop (md:hidden wins cascade).
+
+Affected: tailwind-layout-stack + tailwind-form-stack now gated.
+Unaffected: tailwind-sidebar-drawer (token-match verified safe in v1.13.1).
+
+### Fixed — silent error swallowing on production-impact paths
+
+After industry-bar research (jscodeshift, codemod-js, lebab, react-codemod,
+eslint), confirmed: silent catches on transform path = below codemod-industry
+floor (only justified for known optional-dep probes).
+
+Converted 5 catch blocks from silent to log+context:
+- baseline.mjs:135 cookie banner click — console.warn '[rm:cookie-click]' + selector + message
+- verify.mjs:184 element regions extract — log '[rm:element-regions]' + route + message
+- verify.mjs:188 browser launch failure — log '[rm:element-regions-browser]'
+- apply.mjs:292 fix-low-color-contrast CSS parse — log target file + error line
+- apply.mjs:546 add-srcset sharp variant — log src file + error message
+
+### Not done yet (deferred to v1.14.0 proper)
+- Full test fixture suite (target: 15-25 files, industry median)
+- TypeScript .d.ts via JSDoc + tsc --declaration
+- AST-tree JSX walker for layout-stack (currently regex+token guard, structurally insufficient for utility-Tailwind)
+
+### Honest state
+This release is GitHub-only — NOT published to npm. v1.13.0 (recalled) remains
+the only npm-published version with critical bugs. v1.14.0 will be the next
+npm publish after proper test suite + types + AST walker.
+
 ## [1.13.2] — 2026-06-07 (round-2 review found regressions in 1.13.1)
 
 ### Fixed — regressions introduced by 1.13.1 hotfix

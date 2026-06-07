@@ -60,6 +60,8 @@ const aggressive = !!flag('aggressive');
 const noEscalate = !!flag('no-escalate');
 const autoImpeccable = !!flag('auto-impeccable');
 const jsonOutput = !!flag('json-output');
+// v1.13.3: layout-stack + form-stack disabled by default after real-world bug found.
+const enableLayoutCodemods = !!flag('enable-layout-codemods');
 
 async function loadBriefOrSynth() {
   if (urlArg) {
@@ -159,7 +161,11 @@ See https://github.com/beemusicco/responsive-modernize`);
       else if (phase === 'baseline') results.baseline = await runBaseline({brief, briefDir, outDir, viewports, engines, deep, dryRun});
       else if (phase === 'perf-gate') results.perfGate = await runPerfGate({brief, briefDir, outDir, viewports});
       else if (phase === 'diagnose') results.diagnose = await runDiagnose({brief, briefDir, outDir, viewports, engines, dryRun});
-      else if (phase === 'propose') results.propose = await runPropose({brief, briefDir, outDir});
+      else if (phase === 'propose') {
+        // v1.13.3: thread CLI flag into brief so propose.mjs can gate layout codemods.
+        if (enableLayoutCodemods) brief.enableLayoutCodemods = true;
+        results.propose = await runPropose({brief, briefDir, outDir});
+      }
       else if (phase === 'apply') {
         // Snapshot pre-apply diagnose so iterative loop doesn't overwrite the baseline measurement
         try {
@@ -178,6 +184,7 @@ See https://github.com/beemusicco/responsive-modernize`);
             try {
               await runScan({brief, briefDir, outDir});
               await runDiagnose({brief, briefDir, outDir, viewports, engines, dryRun: false});
+              if (enableLayoutCodemods) brief.enableLayoutCodemods = true;
               const reprop = await runPropose({brief, briefDir, outDir});
               const nextAutoFixable = reprop.counts?.autoFixable ?? 0;
               if (nextAutoFixable === 0) {
