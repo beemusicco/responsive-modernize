@@ -2,6 +2,52 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.10.0] — 2026-06-07
+
+### Added — 14 gaps closed for bulletproof autonomous E2E
+
+**New auto-fix handlers (4)**:
+- `tailwind-form-stack` (#16) — Form files: `grid-cols-N` inputs → `grid-cols-1 md:grid-cols-N`
+- `tailwind-sidebar-drawer` (#17) — `<aside>` / `.sidebar` className → prepend `hidden lg:block`
+- `add-srcset` (#18) — Sharp generates 480/768/1024/1920 variants + injects `srcset` + `sizes` on local `<img>`
+- `table-to-cards` (#19) — Injects responsive CSS converting `<table>` to card view at ≤768px
+
+**New runtime checks (4)**:
+- `low-color-contrast` — WCAG 1.4.3 AA text/background ratio <4.5:1
+- `hover-only-no-focus` — `:hover` rules without matching `:focus` (touch UX)
+- `nav-needs-hamburger` — `<nav>` with >4 visible items on ≤430px viewport
+- `layout-not-responsive` (v1.9, stricter selector in v1.10)
+
+**New phase 2.5 — perf-gate (Core Web Vitals)**:
+- Lightweight CWV gate via Playwright PerformanceObserver
+- Targets per Google 2026: LCP <2.5s, INP <200ms, CLS <0.1
+- Schema overrides: `brief.thresholds.lcp_ms_max` / `inp_ms_max` / `cls_max`
+- Optional Slow 3G throttle: `brief.networkThrottle: 'slow3g'`
+
+**Cookie banner auto-dismiss** in baseline phase:
+- Clicks common Accept/Sprejmi buttons before screenshot
+- EN + SI language patterns
+- Toggle via `brief.dismissCookieBanner: false`
+
+**Flow simulation** via `brief.flowSimulation.steps`:
+- Array of `{action, selector, value, ms}`
+- Actions: click / tap / type / wait / scroll
+- Enables headless login → cart → form flows
+
+**Enhanced LLM agent brief (+3 playbook recipes)**:
+- `nav-needs-hamburger` — wrap nav items in hidden md:flex + toggle button + drawer
+- `hero-needs-rebalance` — flex-col md:flex-row + order-last md:order-none
+- `content-hierarchy-mobile` — hidden md:block for tertiary content, `<details>` for long paragraphs
+
+### Coverage uplift vs v1.9
+- Handlers: 16 → **19**
+- Runtime checks: 13 → **17**
+- Phases: 8 → **9** (added perf-gate)
+- Brief playbook kinds: 6 → **9**
+
+### Verified
+Synthetic fixture (form + sidebar + table + nav): 4/4 codemods applied correctly, idempotency holds on re-run.
+
 ## [1.9.0] — 2026-06-07
 
 ### Added — autonomous desktop→mobile layout transform
