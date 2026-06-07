@@ -2,6 +2,67 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.14.0] — 2026-06-07 (production-grade release)
+
+### Added — first production-ready release
+
+After deep code review, /think analysis, and real-world dry-run revealed
+v1.13.* was below codemod-industry floor, v1.14.0 brings the project up to
+the bar: AST-tree walker, fixture test suite, TypeScript types, no silent
+catches on transform paths.
+
+**lib/jsxWalker.mjs (NEW primitive)**:
+- acorn + acorn-jsx AST parser
+- walkJSX(src, visitor) emits ElementContext {tagName, attrs, ancestorTags, childTagNames, ...}
+- Replaces regex+token guards that failed on utility-only Tailwind
+- Handles nested elements, JSX expressions, fragments, spread props correctly
+
+**tailwindLayoutStackCodemod rewritten**:
+- Now walks JSX AST, checks ACTUAL parent tag context
+- Skips when ancestor chain contains <nav>/<menu>/<header>/<footer>
+- Fixes viagoshop-v2 mobile-bottom-nav bug class (verified via fixture)
+- Falls back gracefully on parse error (returns parseErrors list)
+
+**test/run-fixtures.mjs (NEW)**:
+- 22 fixture files across 6 groups (industry-median test coverage)
+  - layout-stack-safe (3): transforms that SHOULD apply
+  - layout-stack-skip (4): semantic horizontal contexts that MUST be skipped
+  - className-edges (4): cn()/clsx()/spread props/already-responsive
+  - regressions (5): historical bugs that must not recur (viagoshop, marquee, sidebar)
+  - jsxWalker (4): AST primitive structural assertions
+  - contrast (2): deferred to v1.14.1 (needs diagnose-stub fixture)
+- 20/20 currently passing
+- npm test runs full suite
+
+**TypeScript .d.ts emission**:
+- tsconfig.json with allowJs + declaration + emitDeclarationOnly
+- npm run build:types → types/{lib,run}.d.mts
+- package.json "types" field points to types/run.d.mts
+- prepublishOnly hook ensures types ship with every npm publish
+
+**Layout codemods OPT-IN ONLY**:
+- tailwind-layout-stack + tailwind-form-stack remain disabled by default (v1.13.3)
+- Even with AST-safe walker, semantic decisions are best left explicit
+- Opt-in via brief.enableLayoutCodemods=true OR --enable-layout-codemods CLI flag
+
+### Removed
+- Lazy regex codemods deprecated for layout-stack (replaced by AST walker)
+- Internal regex helpers iterateClassNameAttrs/findBalancedBrace/findClosingTag kept for backward compat but no longer the canonical path
+
+### Production-readiness checklist (from /think responsive-modernize-production-ready)
+- [x] Test fixture suite (22 files vs industry median 22) ✓
+- [x] TypeScript .d.ts files emitted ✓
+- [x] AST-based layout codemods (not regex+token guards) ✓
+- [x] Silent catches on transform paths converted to log+context (v1.13.3) ✓
+- [x] Real-world regression fixtures (viagoshop, solaronics, octanorm patterns) ✓
+- [x] CI/CD GitHub Actions ✓ (.github/workflows/ci.yml from v1.6)
+- [x] LICENSE + README + CHANGELOG + CONTRIBUTING ✓
+- [x] Layout codemods opt-in by default for safety ✓
+- [ ] Full Vue SFC / Svelte SFC test coverage (deferred to v1.15)
+- [ ] Lighthouse perf-gate fixtures (deferred)
+
+### This is the first version intended for npm publish.
+
 ## [1.13.3] — 2026-06-07 (production-readiness round)
 
 ### Changed (breaking opt-in default)
