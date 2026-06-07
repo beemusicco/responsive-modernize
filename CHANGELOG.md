@@ -2,6 +2,30 @@
 
 All notable changes to `responsive-modernize`.
 
+## [1.11.0] — 2026-06-07
+
+### Added — close final 3 known gaps (autonomous brand-aware fixes)
+
+**New auto-fix handlers (2)**:
+- fix-low-color-contrast (#22): adjusts CSS color: declarations toward black/white in 15% steps until WCAG 4.5:1 ratio against white background. Adds /* --rm-contrast-fixed */ marker for idempotency.
+- add-focus-visible-rules (#23): for every :hover CSS rule without sibling :focus-visible, inserts cloned rule with :focus-visible selector after. Keyboard + touch users get same affordance.
+
+**Improved no-focus-visible runtime check**:
+- Now uses Playwright keyboard.press('Tab') instead of programmatic .focus(). This actually triggers Chromium's :focus-visible heuristics in headless mode (was unreliable before per v1.8.1 known limitation).
+
+**New helper module** lib/colorMath.mjs:
+- parseColor (hex, rgb, rgba, hsl, hsla)
+- contrastRatio (WCAG 1.4.3 formula)
+- adjustForContrast (iterative toward black/white)
+- colorToString (hex preferred)
+
+### Coverage uplift vs v1.10.1
+- Handlers: 21 -> 23
+- detect-only kinds with auto-fix: 3 -> 1 (only nav-needs-hamburger remains, requires brand decisions)
+
+### Verified
+Synthetic smoke: .muted {color:#ccc} -> #6a6a6a (contrast 4.5:1). a:hover + button:hover duplicated with :focus-visible siblings. Idempotency holds.
+
 ## [1.10.1] — 2026-06-07
 
 ### Fixed — autonomous audit completion (5 gaps from prior session honestly noted)
