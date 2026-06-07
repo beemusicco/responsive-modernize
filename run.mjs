@@ -168,11 +168,13 @@ See https://github.com/beemusicco/responsive-modernize`);
       }
       else if (phase === 'apply') {
         // Snapshot pre-apply diagnose so iterative loop doesn't overwrite the baseline measurement
-        try {
-          const {readFile: rf, writeFile: wf} = await import('fs/promises');
-          const buf = await rf(join(outDir, 'diagnose.json'), 'utf8');
-          await wf(join(outDir, 'diagnose-initial.json'), buf);
-        } catch {}
+        if (!dryRun) {
+          try {
+            const {readFile: rf, writeFile: wf} = await import('fs/promises');
+            const buf = await rf(join(outDir, 'diagnose.json'), 'utf8');
+            await wf(join(outDir, 'diagnose-initial.json'), buf);
+          } catch {}
+        }
         results.apply = await runApply({brief, briefDir, outDir, yes, dryRun, aggressive});
         // Iterative loop: post-apply cascade discovery (e.g. .btn padding shrinks after migrate).
         // Fix 8: each iteration phase wrapped in try/catch — if a sub-phase crashes
